@@ -1,5 +1,16 @@
 # User Guide
 
+## Supported Platforms
+
+- Ubuntu 22.04, 24.04 and 26.04 are supported and tested in CI on x86_64.
+  Ubuntu on WSL is supported as well.
+- Other Linux distributions are supported on a best-effort basis and are not tested.
+  The Home Manager configuration does not depend on the distribution,
+  but the optional Docker Engine setup during host bootstrapping
+  supports only Ubuntu, its derivatives, and Debian stable releases,
+  and on other distributions it is skipped with a warning instead of being offered or installed.
+- macOS and NixOS are not supported.
+
 ## How to Use
 
 This repository can be used in two ways:
