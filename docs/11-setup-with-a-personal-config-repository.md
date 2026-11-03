@@ -39,7 +39,7 @@ It is the only part of the setup that needs privileges, and it is the same scrip
 ## What the Shared Configuration Provides
 
 A personal config repository imports the Home Manager module this repository exports,
-named `homeModules.issl-common` and aliased as `homeModules.default`.
+named `homeModules.common` and aliased as `homeModules.default`.
 
 These options are yours to set:
 

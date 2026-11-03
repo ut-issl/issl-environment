@@ -563,9 +563,9 @@ main() {
 
   ensure_home_manager_profile_dir
   if [[ ${zsh_enabled} == '1' ]]; then
-    home_configuration_name="issl-common-${current_system}"
+    home_configuration_name="common-${current_system}"
   else
-    home_configuration_name="issl-common-bash-only-${current_system}"
+    home_configuration_name="common-bash-only-${current_system}"
   fi
 
   nix --accept-flake-config --extra-experimental-features 'nix-command flakes' run "${repo_root}#home-manager" -- \
