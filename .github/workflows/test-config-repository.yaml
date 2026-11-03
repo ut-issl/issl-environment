@@ -23,7 +23,7 @@ on:
           Repository that provides the environment tests and,
           with `override-issl-input`, the `issl` flake input
         required: false
-        default: ut-issl/issl-ubuntu-environment-setup
+        default: ut-issl/issl-environment
         type: string
       common-ref:
         description: 'Revision of `common-repository` to check out'

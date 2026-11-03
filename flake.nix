@@ -1,5 +1,5 @@
 {
-  description = "Nix-based ISSL Ubuntu environment setup";
+  description = "Shared ISSL environment built with Nix and Home Manager";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";

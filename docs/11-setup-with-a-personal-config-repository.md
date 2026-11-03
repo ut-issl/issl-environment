@@ -174,4 +174,4 @@ then commit it and re-apply your configuration as described in [Apply Your Chang
 Once your settings work as before, delete these files, including `~/.gitconfig.pre-migration`.
 
 The clone that the setup script made is no longer applied once your own configuration takes over.
-Remove it when nothing else refers to it; unless `INSTALL_DIR` was set, it is at `${XDG_DATA_HOME:-$HOME/.local/share}/issl/ubuntu-environment-setup`.
+Remove it when nothing else refers to it; unless `INSTALL_DIR` was set, it is at `${XDG_DATA_HOME:-$HOME/.local/share}/issl/environment`.
