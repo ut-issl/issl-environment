@@ -4,7 +4,7 @@ This page explains how this repository is organized for development.
 
 ## Overview
 
-This repository defines a shared Ubuntu user environment for ISSL with Nix flakes and Home Manager.
+This repository defines a shared user environment for ISSL with Nix flakes and Home Manager.
 
 At a high level:
 

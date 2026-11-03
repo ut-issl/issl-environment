@@ -27,13 +27,13 @@ If you want your own tools and settings versioned and restored on any machine,
 Run:
 
 ```bash
-bash <(curl -fsSL https://github.com/ut-issl/issl-ubuntu-environment-setup/releases/latest/download/setup.sh)
+bash <(curl -fsSL https://github.com/ut-issl/issl-environment/releases/latest/download/setup.sh)
 ```
 
 To pin setup to a fixed release, replace `latest` with a tag such as `v0.8.11`:
 
 ```bash
-bash <(curl -fsSL https://github.com/ut-issl/issl-ubuntu-environment-setup/releases/download/v0.8.11/setup.sh)
+bash <(curl -fsSL https://github.com/ut-issl/issl-environment/releases/download/v0.8.11/setup.sh)
 ```
 
 Each release's `setup.sh` defaults to installing that same release,
@@ -43,8 +43,8 @@ To override setup variables, set environment variables before running the comman
 For example, set `REPO_REF=main` for development, or set `INSTALL_DIR` to choose another install location:
 
 ```bash
-INSTALL_DIR="$HOME/.issl-ubuntu-environment-setup" \
-bash <(curl -fsSL https://github.com/ut-issl/issl-ubuntu-environment-setup/releases/latest/download/setup.sh)
+INSTALL_DIR="$HOME/.issl-environment" \
+bash <(curl -fsSL https://github.com/ut-issl/issl-environment/releases/latest/download/setup.sh)
 ```
 
 After setup, open a new shell.
@@ -68,7 +68,7 @@ Non-interactive setup skips Docker Engine unless you opt in explicitly:
 
 ```bash
 ISSL_INSTALL_DOCKER=yes \
-bash <(curl -fsSL https://github.com/ut-issl/issl-ubuntu-environment-setup/releases/latest/download/setup.sh)
+bash <(curl -fsSL https://github.com/ut-issl/issl-environment/releases/latest/download/setup.sh)
 ```
 
 Set `ISSL_INSTALL_DOCKER=no` to skip the prompt explicitly.
@@ -92,7 +92,7 @@ Non-interactive setup cannot ask, so it skips Zsh unless you say so:
 
 ```bash
 ISSL_ENABLE_ZSH=yes \
-bash <(curl -fsSL https://github.com/ut-issl/issl-ubuntu-environment-setup/releases/latest/download/setup.sh)
+bash <(curl -fsSL https://github.com/ut-issl/issl-environment/releases/latest/download/setup.sh)
 ```
 
 ## If You Need Additional Tools or Settings

@@ -11,7 +11,7 @@ description: >-
 
 # Develop the Shared Environment
 
-Help update or extend the shared ISSL Ubuntu environment, one change at a time:
+Help update or extend the shared ISSL environment, one change at a time:
 add a tool, update a module, change a file it deploys, or adjust the imperative setup.
 
 `docs/92-updating-or-adding-a-module.md` holds the conventions of this repository.
