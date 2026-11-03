@@ -23,8 +23,8 @@
       forAllSystems = nixpkgs.lib.genAttrs systems;
       mkPkgs = system: import nixpkgs { inherit system; };
       homeModules = rec {
-        issl-common = ./home-modules;
-        default = issl-common;
+        common = ./home-modules;
+        default = common;
       };
       requireEnv =
         name:
@@ -70,19 +70,19 @@
       inherit homeModules;
 
       homeConfigurations = {
-        issl-common-x86_64-linux = mkHomeConfiguration {
+        common-x86_64-linux = mkHomeConfiguration {
           system = "x86_64-linux";
           enableZsh = true;
         };
-        issl-common-aarch64-linux = mkHomeConfiguration {
+        common-aarch64-linux = mkHomeConfiguration {
           system = "aarch64-linux";
           enableZsh = true;
         };
-        issl-common-bash-only-x86_64-linux = mkHomeConfiguration {
+        common-bash-only-x86_64-linux = mkHomeConfiguration {
           system = "x86_64-linux";
           enableZsh = false;
         };
-        issl-common-bash-only-aarch64-linux = mkHomeConfiguration {
+        common-bash-only-aarch64-linux = mkHomeConfiguration {
           system = "aarch64-linux";
           enableZsh = false;
         };
