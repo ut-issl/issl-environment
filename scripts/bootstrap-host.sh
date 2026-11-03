@@ -383,17 +383,50 @@ maybe_offer_github_ssh_setup() {
   prompt_github_ssh_setup
 }
 
-should_install_docker() {
-  if is_yes "${ISSL_INSTALL_DOCKER-}"; then
-    return 0
-  fi
+# Print the distribution and suite of the Docker apt repository for this host, or fail if Docker Engine setup does not support it.
+docker_apt_repository() {
+  (
+    distribution=''
+    suite=''
+    unset ID UBUNTU_CODENAME VERSION_CODENAME VERSION_ID
 
+    if [[ -r /etc/os-release ]]; then
+      # shellcheck source=/dev/null
+      . /etc/os-release
+    fi
+
+    if [[ ${ID-} == 'ubuntu' || -n ${UBUNTU_CODENAME-} ]]; then
+      distribution='ubuntu'
+      suite="${UBUNTU_CODENAME:-${VERSION_CODENAME-}}"
+    elif [[ ${ID-} == 'debian' && -n ${VERSION_ID-} ]]; then
+      distribution='debian'
+      suite="${VERSION_CODENAME-}"
+    fi
+
+    if [[ -z ${distribution} || -z ${suite} ]]; then
+      return 1
+    fi
+
+    printf '%s %s\n' "${distribution}" "${suite}"
+  )
+}
+
+should_install_docker() {
   if is_no "${ISSL_INSTALL_DOCKER-}"; then
     return 1
   fi
 
-  if ! is_interactive; then
+  if ! is_yes "${ISSL_INSTALL_DOCKER-}" && ! is_interactive; then
     return 1
+  fi
+
+  if ! docker_apt_repository >/dev/null; then
+    echo 'warning: Docker Engine setup supports only Ubuntu, its derivatives, and Debian stable releases; skipping it. Install Docker Engine through your distribution if you need it.' >&2
+    return 1
+  fi
+
+  if is_yes "${ISSL_INSTALL_DOCKER-}"; then
+    return 0
   fi
 
   prompt_yes_no 'Install Docker Engine for local container execution? [Y/n]' yes
@@ -424,23 +457,18 @@ target_docker_user() {
 install_docker_engine() {
   local apt_keyrings_dir='/etc/apt/keyrings'
   local docker_user=''
-  local ubuntu_codename=''
+  local repository=''
+  local distribution=''
+  local suite=''
   local architecture=''
 
   require_command sudo
   require_command apt-get
   require_command dpkg
 
-  if [[ -r /etc/os-release ]]; then
-    # shellcheck source=/dev/null
-    . /etc/os-release
-  fi
-
-  ubuntu_codename="${UBUNTU_CODENAME:-${VERSION_CODENAME:-}}"
-  if [[ -z ${ubuntu_codename} ]]; then
-    echo 'could not determine the Ubuntu codename for Docker repository setup.' >&2
-    exit 1
-  fi
+  repository="$(docker_apt_repository)"
+  distribution="${repository%% *}"
+  suite="${repository#* }"
 
   sudo apt-get update
   sudo apt-get --yes install ca-certificates curl gnupg
@@ -448,14 +476,14 @@ install_docker_engine() {
   require_command gpg
   sudo install -m 0755 -d "${apt_keyrings_dir}"
 
-  curl --fail --location --show-error --silent https://download.docker.com/linux/ubuntu/gpg |
+  curl --fail --location --show-error --silent "https://download.docker.com/linux/${distribution}/gpg" |
     gpg --dearmor |
     sudo tee "${apt_keyrings_dir}/docker.gpg" >/dev/null
   sudo chmod a+r "${apt_keyrings_dir}/docker.gpg"
 
   architecture="$(dpkg --print-architecture)"
-  printf 'deb [arch=%s signed-by=%s/docker.gpg] https://download.docker.com/linux/ubuntu %s stable\n' \
-    "${architecture}" "${apt_keyrings_dir}" "${ubuntu_codename}" |
+  printf 'deb [arch=%s signed-by=%s/docker.gpg] https://download.docker.com/linux/%s %s stable\n' \
+    "${architecture}" "${apt_keyrings_dir}" "${distribution}" "${suite}" |
     sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 
   sudo apt-get update

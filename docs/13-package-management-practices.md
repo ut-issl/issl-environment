@@ -6,7 +6,8 @@ When choosing how to install tools after setup, use this order by default:
 
 1. Nix with Home Manager for globally available user-environment tools.
 2. Project-local package managers (`uv`, `cargo`, `npm`, etc.) for repository-specific dependencies.
-3. `apt` when the package has to be owned by the distribution: system-level or host integration,
+3. The distribution's package manager, such as `apt`,
+   when the package has to be owned by the distribution: system-level or host integration,
    or applications that enforce their own updates.
 
 ## 1. Globally Available Tools
@@ -23,7 +24,8 @@ so the desktop entries of the packages it installs are picked up by the desktop 
 
 GPU driver integration is disabled here.
 A Nix-built application that renders through OpenGL looks for the drivers under `/run/opengl-driver`,
-which Ubuntu does not provide, so it cannot use the GPU until the integration is set up.
+which distributions other than NixOS, such as Ubuntu, do not provide,
+so it cannot use the GPU until the integration is set up.
 
 If you install such an application through a personal config repository, enable the integration there:
 
@@ -76,7 +78,8 @@ Use project-local package managers for dependencies that belong to a specific re
 
 ## 3. Distribution Packages
 
-Use `apt` when a package should be owned by the distribution rather than by Home Manager.
+Use the distribution's package manager, such as `apt`,
+when a package should be owned by the distribution rather than by Home Manager.
 
 - **System-level integration**: services, drivers, and low-level OS packages.
 - **Host integration**: applications that depend on the sandboxing rules, input methods, or device permissions of the distribution.

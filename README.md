@@ -15,6 +15,12 @@ A repository for distributing a reproducible and maintainable shared environment
 > It is provided as-is, without user support or compatibility guarantees.
 > Use it at your own risk.
 
+## Supported Platforms
+
+Ubuntu 22.04, 24.04 and 26.04 are supported and tested in CI, and Ubuntu on WSL is supported as well.
+Other Linux distributions are supported on a best-effort basis.
+See [Supported Platforms](docs/10-user-guide.md#supported-platforms) for details.
+
 ## How to Use
 
 This repository can be used in two ways:

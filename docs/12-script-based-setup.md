@@ -73,6 +73,10 @@ bash <(curl -fsSL https://github.com/ut-issl/issl-environment/releases/latest/do
 
 Set `ISSL_INSTALL_DOCKER=no` to skip the prompt explicitly.
 
+Docker Engine setup supports only Ubuntu, its derivatives such as Linux Mint, and Debian stable releases.
+On other distributions, setup skips it with a warning instead of offering or installing it;
+install Docker Engine through your distribution if you need it.
+
 ### Login Shell
 
 Setup asks, with yes as the default answer, to make `~/.local/state/issl/login-shell` your login shell.

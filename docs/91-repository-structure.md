@@ -52,7 +52,7 @@ This directory contains imperative shell entry points.
 - `scripts/setup.sh` is the script-based setup entry point.
   - It prepares the host for setup through `scripts/bootstrap-host.sh`.
   - It clones this repository into the install location.
-  - It is designed for users who start from a plain Ubuntu environment.
+  - It is designed for users who start from a plain Linux environment.
 - `scripts/apply.sh` applies this repository's shared configuration into the current user environment.
   - It writes include blocks or startup hooks into user-controlled files.
   - It places the shared configuration files under the ISSL config directory.
