@@ -91,11 +91,15 @@ when a package should be owned by the distribution rather than by Home Manager.
 
 This environment passes these practices on to coding agents:
 
-- Claude Code reads them as a rule from `~/.claude/rules/issl-environment.md`.
-- Codex reads them as the `issl-environment` skill from `~/.agents/skills/`,
-  and `~/.codex/rules/issl.rules` blocks the global install commands that the practices above rule out,
-  such as `pip install`, `uv tool install`, `npm install -g`, and `cargo install`.
-
-The rules file is a copy rather than a link, and every switch overwrites it, so keep your own Codex rules in another file.
-Home Manager does not track the copy either, so delete it by hand if you stop using the shared environment.
-A command that the rules block still runs when you enter it yourself.
+- Claude Code
+  - It reads them as a rule from `~/.claude/rules/issl-environment.md`.
+- Codex
+  - Skill: it reads them as the `issl-environment` skill from `~/.agents/skills/`.
+  - Rules: `~/.codex/rules/issl.rules` blocks the global install commands that the practices above rule out,
+    such as `pip install`, `uv tool install`, `npm install -g`, and `cargo install`.
+    - The rules match a command by its leading words,
+      so they catch the usual spellings but not every one, such as a flag placed after the package name.
+    - The rules apply only to the commands that Codex runs, so a command you enter yourself still runs.
+    - The file is a copy rather than a link, and every switch overwrites it,
+      so keep your own Codex rules in another file.
+    - Home Manager does not track the copy, so delete it by hand if you stop using the shared environment.
