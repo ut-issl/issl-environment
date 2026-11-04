@@ -75,6 +75,10 @@
   description: 'Bug report'
   color: 'FF9F72'
 
+- name: links
+  description: 'Broken link report'
+  color: 'E99695'
+
 - name: automated
   description: 'Opened by a bot'
   color: 'D6D6D6'
