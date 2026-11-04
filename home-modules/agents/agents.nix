@@ -21,12 +21,14 @@ let
   '';
 in
 {
+  programs.codex.enable = true;
+
   home.file = {
     "${config.programs.claude-code.configDir}/rules/issl-environment.md".source = ./issl-environment.md;
     ".agents/skills/issl-environment".source = environmentSkill;
   };
 
   home.activation.installCodexRules = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    run install -D -m 0444 ${./issl.rules} "${codexHome}/rules/issl.rules"
+    run install -D -m 0444 ${./issl-environment.rules} "${codexHome}/rules/issl-environment.rules"
   '';
 }

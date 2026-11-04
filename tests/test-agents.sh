@@ -3,10 +3,11 @@ set -Eeuo pipefail
 
 home_dir="${HOME_DIR:?HOME_DIR is required}"
 common_dir="${COMMON_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}"
+nix_profile_bin="${home_dir}/.nix-profile/bin"
 module_dir="${common_dir}/home-modules/agents"
 claude_rule_path="${home_dir}/.claude/rules/issl-environment.md"
 codex_skill_dir="${home_dir}/.agents/skills/issl-environment"
-codex_rules_path="${home_dir}/.codex/rules/issl.rules"
+codex_rules_path="${home_dir}/.codex/rules/issl-environment.rules"
 
 source "${common_dir}/tests/lib.sh"
 
@@ -18,6 +19,11 @@ _assert_execpolicy_decision() {
 
   decision="$(codex execpolicy check -r "${codex_rules_path}" -- "$@" | jq -r '.decision // "none"')"
   assert_equal "${decision}" "${expected}" || return 1
+}
+
+test_codex_installation() {
+  assert_command_path "${nix_profile_bin}/codex"
+  codex --version
 }
 
 test_claude_rule_file() {
@@ -35,7 +41,7 @@ test_codex_rules_file() {
   local file_type
   file_type="$(stat -c %F "${codex_rules_path}")"
   assert_equal "${file_type}" 'regular file'
-  cmp "${module_dir}/issl.rules" "${codex_rules_path}"
+  cmp "${module_dir}/issl-environment.rules" "${codex_rules_path}"
 }
 
 test_codex_rules_forbid_global_installs() {
@@ -65,6 +71,7 @@ test_codex_rules_allow_project_dependencies() {
 }
 
 main() {
+  run_test test_codex_installation
   run_test test_claude_rule_file
   run_test test_codex_skill_directory
   run_test test_codex_rules_file

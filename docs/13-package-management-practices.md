@@ -95,7 +95,8 @@ This environment passes these practices on to coding agents:
   - It reads them as a rule from `~/.claude/rules/issl-environment.md`.
 - Codex
   - Skill: it reads them as the `issl-environment` skill from `~/.agents/skills/`.
-  - Rules: `~/.codex/rules/issl.rules` blocks the global install commands that the practices above rule out,
+  - Rules: `~/.codex/rules/issl-environment.rules`, under `$CODEX_HOME` instead when Home Manager sets it,
+    blocks the global install commands that the practices above rule out,
     such as `pip install`, `uv tool install`, `npm install -g`, and `cargo install`.
     - The rules match a command by its leading words,
       so they catch the usual spellings but not every one, such as a flag placed after the package name.
