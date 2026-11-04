@@ -26,11 +26,16 @@ Three destinations are available, and the choice between them comes before any o
 [Package management practices](13-package-management-practices.md) describes the last two from the user's side.
 
 The shared environment owns what it deploys under `~/.config/issl/` and `~/.local/state/issl/`,
-along with `~/.clang-format`, the one fixed path outside them that a module deploys.
+along with the fixed paths outside them that a module deploys:
+`~/.clang-format`, and the files that `agents/agents.nix` adds to the directories coding agents read,
+each named after ISSL so that it sits beside the files of the user.
 It never takes ownership of a file the user is expected to edit, such as `~/.bashrc` or `~/.config/git/config`.
 That rules out `home.file` on such a path, and the `programs.<tool>` options that write one;
-a `programs.<tool>` option that only installs a package is unaffected, as `programs.home-manager` in `nix/nix.nix` shows.
+a `programs.<tool>` option that only installs a package is unaffected,
+as `programs.home-manager` in `nix/nix.nix` and `programs.codex` in `agents/agents.nix` show.
 [Connecting to User-Managed Files](#connecting-to-user-managed-files) describes how the two are joined instead.
+`agents/agents.nix` deploys its files through `home.file` rather than the options of `programs.codex` and `programs.claude-code`,
+since a definition of those options here would restrict how a personal config repository sets them.
 
 The shared environment installs no graphical application, and a new one does not belong here either.
 A Nix build often loses host integration that the package of the distribution keeps, in ways that vary by toolkit.

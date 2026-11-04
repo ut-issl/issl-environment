@@ -1,0 +1,49 @@
+# Managed by the ISSL shared environment; changes are overwritten on the next switch.
+
+prefix_rule(
+    pattern = [["pip", "pip3"], "install"],
+    decision = "forbidden",
+    justification = "ISSL environment: manage Python dependencies with uv (uv add), and install global tools with Nix instead of pip.",
+)
+
+prefix_rule(
+    pattern = [["python", "python3"], "-m", "pip", "install"],
+    decision = "forbidden",
+    justification = "ISSL environment: manage Python dependencies with uv (uv add), and install global tools with Nix instead of pip.",
+)
+
+prefix_rule(
+    pattern = ["pipx", ["install", "inject"]],
+    decision = "forbidden",
+    justification = "ISSL environment: install global tools with Nix (a personal config repository or nix profile add) instead of pipx.",
+)
+
+prefix_rule(
+    pattern = ["poetry", ["new", "init"]],
+    decision = "forbidden",
+    justification = "ISSL environment: start new Python projects with uv (uv init) instead of poetry.",
+)
+
+prefix_rule(
+    pattern = ["uv", "tool", "install"],
+    decision = "forbidden",
+    justification = "ISSL environment: install global tools with Nix (a personal config repository or nix profile add) instead of uv tool install.",
+)
+
+prefix_rule(
+    pattern = ["npm", ["install", "i", "add"], ["-g", "--global"]],
+    decision = "forbidden",
+    justification = "ISSL environment: install global tools with Nix (a personal config repository or nix profile add) instead of npm install -g.",
+)
+
+prefix_rule(
+    pattern = ["npm", ["-g", "--global"], ["install", "i", "add"]],
+    decision = "forbidden",
+    justification = "ISSL environment: install global tools with Nix (a personal config repository or nix profile add) instead of npm install -g.",
+)
+
+prefix_rule(
+    pattern = ["cargo", ["install", "binstall"]],
+    decision = "forbidden",
+    justification = "ISSL environment: install global tools with Nix (a personal config repository or nix profile add) instead of cargo install.",
+)
