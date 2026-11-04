@@ -26,7 +26,9 @@ Three destinations are available, and the choice between them comes before any o
 [Package management practices](13-package-management-practices.md) describes the last two from the user's side.
 
 The shared environment owns what it deploys under `~/.config/issl/` and `~/.local/state/issl/`,
-along with `~/.clang-format`, the one fixed path outside them that a module deploys.
+along with the fixed paths outside them that a module deploys:
+`~/.clang-format`, and the files that `agents/agents.nix` adds to the directories coding agents read,
+each named after ISSL so that it sits beside the files of the user.
 It never takes ownership of a file the user is expected to edit, such as `~/.bashrc` or `~/.config/git/config`.
 That rules out `home.file` on such a path, and the `programs.<tool>` options that write one;
 a `programs.<tool>` option that only installs a package is unaffected, as `programs.home-manager` in `nix/nix.nix` shows.
