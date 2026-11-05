@@ -43,7 +43,7 @@ A Nix build often loses host integration that the package of the distribution ke
 - An AppArmor profile attaches to an executable path.
   A Chromium- or Electron-based application built by Nix never matches the profile that grants it a user namespace,
   so it fails to start on Ubuntu 24.04 and later, where unprivileged user namespaces are restricted by default.
-- Under X11, including XWayland, a Nix-built GTK3 application cannot load the IBus module of the distribution,
+- Under X11, including Xwayland, a Nix-built GTK 3 application cannot load the IBus module of the distribution,
   so the IBus input methods reach it at most through XIM, which GTK picks by default only for a few locales, such as Japanese.
 - OpenGL rendering needs `targets.genericLinux.gpu.enable`, which is off here.
 
