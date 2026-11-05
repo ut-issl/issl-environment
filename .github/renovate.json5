@@ -190,8 +190,11 @@
     },
   ],
   lockFileMaintenance: {
-    description: 'Skip the release-age gate, as nix flake update looks up no releases, so its updates carry no release timestamp and would otherwise keep the stability check pending forever',
+    description: 'Skip the release-age gate, as nix flake update looks up no releases, so its updates carry no release timestamp and would otherwise keep the stability check pending forever; and allow the whole of Monday, as the few runs a day can miss the default window of the first four hours',
     minimumReleaseAge: '0 days',
+    schedule: [
+      '* * * * 1',
+    ],
     addLabels: [
       'update::patch',
     ],
@@ -207,6 +210,13 @@
         'action',
       ],
       allowedVersions: '/^v?\\d+\\.\\d+\\.\\d+$/',
+    },
+    {
+      description: 'Create lock file maintenance ahead of the other branches, as it otherwise sorts last and loses the hourly PR limit to them in every run that falls in its schedule',
+      matchUpdateTypes: [
+        'lockFileMaintenance',
+      ],
+      prPriority: 1,
     },
     {
       matchFileNames: [
