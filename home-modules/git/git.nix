@@ -1,13 +1,7 @@
 { pkgs, ... }:
 
 {
-  home.packages = [
-    pkgs.git
-    pkgs.gh
-    pkgs.act
-    pkgs.actionlint
-    pkgs.zizmor
-  ];
+  home.packages = [ pkgs.git ];
 
   xdg.configFile."issl/git/.gitconfig".source = ./gitconfig;
 }
