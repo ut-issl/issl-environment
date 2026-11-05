@@ -114,6 +114,20 @@ so a package that is meaningful on only some of them needs a guard on the platfo
 as `cpp/cpp.nix` does with `pkgs.stdenv.hostPlatform.isx86_64` for the multilib GCC.
 An unguarded package that fails to evaluate on one of them breaks every output of that system.
 
+Packages come from the stable release that `flake.nix` pins as `nixpkgs`,
+which keeps their versions fixed between releases of this repository,
+but receives few version updates after it branches off.
+A package whose pinned version can stop working on its own may come from the `nixpkgs-unstable` input instead,
+such as a client that its remote service refuses once it falls too far behind.
+Coding agents such as Codex and Claude Code are examples.
+Take such a package through an overlay in the module that it belongs to, as `agents/agents.nix` does,
+and place the overlay first with `lib.mkBefore`,
+so that an overlay of a personal config repository can still replace the package.
+The `nixpkgs-unstable` input reaches every module as the `nixpkgsUnstable` argument, which `flake.nix` sets on `homeModules.default`.
+The overlay replaces the package in `pkgs`, so it also reaches a personal config repository that installs the package itself.
+Add the package to the `unstable-packages` check in `flake.nix` as well.
+Keep every other package on the stable release.
+
 A module may also set Home Manager options directly, as `platform/platform.nix` does for `targets.genericLinux`.
 Use `lib.mkDefault` for an option a personal config repository should be able to override,
 and a plain definition for one that has to hold for everyone, as `programs.home-manager.enable` does in `nix/nix.nix`.
@@ -255,7 +269,8 @@ A directory whose `<name>.nix` alone is untracked is reported as missing that fi
 
    This builds the checks of the system of this machine and catches Nix evaluation errors and build failures.
    They include the activation packages for the default and the Bash-only configuration,
-   and the assertion that the GPU option stays off.
+   the assertion that the GPU option stays off,
+   and the assertion that the packages taken from `nixpkgs-unstable` come from it.
    `--all-systems` widens the evaluation to every system declared in `flake.nix` without building more,
    so a change that fails to evaluate on `aarch64-linux` is caught here rather than in CI.
 

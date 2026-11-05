@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  nixpkgsUnstable,
   ...
 }:
 
@@ -21,6 +22,19 @@ let
   '';
 in
 {
+  nixpkgs.overlays = lib.mkBefore [
+    (_final: prev: {
+      inherit
+        (import nixpkgsUnstable {
+          inherit (prev.stdenv.hostPlatform) system;
+          inherit (prev) config;
+        })
+        claude-code
+        codex
+        ;
+    })
+  ];
+
   programs.codex.enable = true;
 
   home.file = {
