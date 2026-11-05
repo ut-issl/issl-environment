@@ -56,6 +56,8 @@ The shared module also decides the following for every configuration that import
 - `nixpkgs.config.allowUnfree` is set to `true`,
   so unfree packages you add in your own repository install without extra setup.
   See [package management practices](13-package-management-practices.md#unfree-packages).
+- Clients that a remote service refuses once they fall too far behind, such as Codex and Claude Code,
+  come from `nixpkgs-unstable` instead of the stable release, including when you install one in your own repository.
 - `targets.genericLinux` is enabled, so the desktop entries of the packages you install are visible to the desktop environment.
 - Your login shell follows `issl.zsh.enable`,
   through the link `~/.local/state/issl/login-shell` that the shared module retargets on every switch.

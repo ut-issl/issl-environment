@@ -62,6 +62,8 @@ For a new tool:
   or has to stay with the distribution depends on the host integration it needs.
 - Look the package up in Nixpkgs at the pinned revision:
   read the `nixpkgs` entry's `locked.rev` from `flake.lock` and run `nix search github:NixOS/nixpkgs/<rev> <name>`.
+  Read the `nixpkgs-unstable` entry instead for a package
+  that § "Changing a Module's Packages or Settings" lets come from it.
 - Work out whether the package is meaningful on every system that `flake.nix` declares,
   and guard it on the platform if it is not, as § "Changing a Module's Packages or Settings" describes.
 - An unfree package needs an explicit yes from the user before you add it,
