@@ -38,12 +38,15 @@ as `programs.home-manager` in `nix/nix.nix` and `programs.codex` in `agents/agen
 since a definition of those options here would restrict how a personal config repository sets them.
 
 The shared environment installs no graphical application, and a new one does not belong here either.
-A Nix build often loses host integration that the package of the distribution keeps, in ways that vary by toolkit.
-An AppArmor profile attaches to an executable path.
-A Chromium- or Electron-based application built by Nix never matches the profile that grants it a user namespace,
-so it fails to start on Ubuntu 24.04 and later, where unprivileged user namespaces are restricted by default.
-The IBus input methods do not reach a Nix-built GTK3 application,
-and OpenGL rendering needs `targets.genericLinux.gpu.enable`, which is off here.
+A Nix build often loses host integration that the package of the distribution keeps, in ways that vary by application:
+
+- An AppArmor profile attaches to an executable path.
+  A Chromium- or Electron-based application built by Nix never matches the profile that grants it a user namespace,
+  so it fails to start on Ubuntu 24.04 and later, where unprivileged user namespaces are restricted by default.
+- Under X11, including XWayland, a Nix-built GTK3 application cannot load the IBus module of the distribution,
+  so the IBus input methods reach it at most through XIM, which GTK picks by default only for a few locales, such as Japanese.
+- OpenGL rendering needs `targets.genericLinux.gpu.enable`, which is off here.
+
 Where such an application belongs instead depends on the host integration it needs.
 
 `nix/nix.nix` sets `nixpkgs.config.allowUnfree = true` for the whole configuration,
