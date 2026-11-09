@@ -30,10 +30,10 @@ Run:
 bash <(curl -fsSL https://github.com/ut-issl/issl-environment/releases/latest/download/setup.sh)
 ```
 
-To pin setup to a fixed release, replace `latest` with a tag such as `v0.11.0`:
+To pin setup to a fixed release, replace `latest` with a tag such as `v0.11.1`:
 
 ```bash
-bash <(curl -fsSL https://github.com/ut-issl/issl-environment/releases/download/v0.11.0/setup.sh)
+bash <(curl -fsSL https://github.com/ut-issl/issl-environment/releases/download/v0.11.1/setup.sh)
 ```
 
 Each release's `setup.sh` defaults to installing that same release,
