@@ -51,6 +51,7 @@ jobs:
           label-patch: update::patch
           manual-bump-type: ${{ inputs.bump-type }}
           labels-to-add: automated,release
+          auto-merge: squash
           create-release: false
           github-token: ${{ steps.app-token.outputs.token }}
 
