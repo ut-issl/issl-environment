@@ -62,9 +62,6 @@ jobs:
 
   lint-pull-request-title:
     name: Lint pull request title
-    if: >-
-      github.event.action != 'edited'
-      || github.event.changes.title != null
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
