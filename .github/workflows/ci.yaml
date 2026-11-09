@@ -787,3 +787,48 @@ jobs:
         with:
           prek-version: 'v0.5.10'
           extra-args: --skip=no-commit-to-branch --all-files
+
+  check-ci-results:
+    name: Check CI results
+    needs:
+      - determine-changes
+      - lint-github-actions
+      - audit-zizmor
+      - validate-renovate-config
+      - validate-json5
+      - format-toml
+      - lint-toml
+      - lint-yaml
+      - check-links
+      - lint-markdown
+      - format-nix
+      - lint-nix
+      - format-python
+      - lint-python
+      - format-shell-scripts
+      - lint-shell-scripts
+      - format-zsh
+      - validate-zsh
+      - check-spelling
+      - lint-commit-messages
+      - run-prek-hooks
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check the job results
+        env:
+          JOB_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          failed_jobs="$(jq --raw-output '
+              to_entries[]
+              | select(.value.result != "success" and .value.result != "skipped")
+              | "\(.key) finished with \(.value.result)."
+            ' <<< "${JOB_RESULTS}")"
+          if [[ -n ${failed_jobs} ]]; then
+            while IFS= read -r failed_job; do
+              echo "::error title=check-ci-results::${failed_job}"
+            done <<< "${failed_jobs}"
+            exit 1
+          fi
