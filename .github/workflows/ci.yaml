@@ -522,7 +522,7 @@ jobs:
 
       - name: Format Python
         env:
-          RUFF_VERSION: '0.17.3'
+          RUFF_VERSION: '0.17.4'
         run: uvx --from="ruff==${RUFF_VERSION}" ruff format .
 
       - name: Suggest Python formatting
@@ -565,7 +565,7 @@ jobs:
 
       - name: Lint Python
         env:
-          RUFF_VERSION: '0.17.3'
+          RUFF_VERSION: '0.17.4'
         run: uvx --from="ruff==${RUFF_VERSION}" ruff check --output-format=github .
 
   format-shell-scripts:
