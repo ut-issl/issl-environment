@@ -227,9 +227,9 @@ jobs:
                   | sed -e 's/^</-/' -e 's/^>/+/' -e 's/^/  /' > "${work_dir}/${attribute}.changes"
                 echo '  <details><summary>Derivation and source name changes</summary>'
                 echo
-                echo "  \`\`\`diff"
+                printf "  \`\`\`diff\n"
                 head -n 200 "${work_dir}/${attribute}.changes"
-                echo "  \`\`\`"
+                printf "  \`\`\`\n"
                 echo
                 echo '  </details>'
               fi

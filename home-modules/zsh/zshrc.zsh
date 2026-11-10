@@ -16,7 +16,7 @@ export HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history" # Persist hi
 # zsh does not create the history file's parent directory on its own.
 issl_zsh_histfile_dir="${HISTFILE:h}"
 if [ ! -d "${issl_zsh_histfile_dir}" ]; then
-  mkdir -p "${issl_zsh_histfile_dir}" 2>/dev/null || true
+  mkdir -p "${issl_zsh_histfile_dir}" 2> /dev/null || true
 fi
 
 export HISTSIZE=10000 # Keep up to 10000 commands in memory.
@@ -74,7 +74,7 @@ issl_prompt_precmd() {
   fi
 
   # Keep git in the command hash table, which vcs_info tests to detect git.
-  hash git 2>/dev/null
+  hash git 2> /dev/null
 
   vcs_info
   # Escape the prompt metacharacters in the VCS information.
@@ -93,15 +93,15 @@ add-zsh-hook precmd issl_prompt_precmd
 # Add $ZDOTDIR/functions to fpath for user-managed functions and completions.
 issl_zsh_functions_dir="${ZDOTDIR}/functions"
 if [ ! -d "${issl_zsh_functions_dir}" ]; then
-  mkdir -p "${issl_zsh_functions_dir}" 2>/dev/null || true
+  mkdir -p "${issl_zsh_functions_dir}" 2> /dev/null || true
 fi
 if [ -d "${issl_zsh_functions_dir}" ]; then
   fpath=("${issl_zsh_functions_dir}" "${fpath[@]}")
 fi
 
 # Make toolchain-provided cargo completion discoverable by compinit.
-if command -v rustc >/dev/null 2>&1; then
-  issl_rustup_cargo_completion_dir="$(rustc --print sysroot 2>/dev/null)/share/zsh/site-functions"
+if command -v rustc > /dev/null 2>&1; then
+  issl_rustup_cargo_completion_dir="$(rustc --print sysroot 2> /dev/null)/share/zsh/site-functions"
   if [ -f "${issl_rustup_cargo_completion_dir}/_cargo" ]; then
     fpath=("${issl_rustup_cargo_completion_dir}" "${fpath[@]}")
   fi
@@ -146,14 +146,14 @@ issl_eval_completion() {
 }
 
 # Enable uv completion when uv is available.
-if command -v uv >/dev/null 2>&1; then
-  if uv generate-shell-completion zsh >/dev/null 2>&1; then
+if command -v uv > /dev/null 2>&1; then
+  if uv generate-shell-completion zsh > /dev/null 2>&1; then
     issl_eval_completion "$(uv generate-shell-completion zsh)"
   fi
 fi
 
 # Enable rustup completion when rustup is available.
-if command -v rustup >/dev/null 2>&1; then
+if command -v rustup > /dev/null 2>&1; then
   issl_eval_completion "$(rustup completions zsh)"
 fi
 

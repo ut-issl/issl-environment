@@ -14,7 +14,7 @@ source "${common_dir}/tests/lib.sh"
 _is_python_ge_3_13() {
   local py_version major minor
   py_version="$(uv run --no-project --python=3 python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
-  IFS=. read -r major minor <<<"${py_version}"
+  IFS=. read -r major minor <<< "${py_version}"
   [[ ${major} -gt 3 || (${major} -eq 3 && ${minor} -ge 13) ]]
 }
 
@@ -56,8 +56,8 @@ test_python_startup_is_loaded() {
   local marker_dir
   marker_dir="$(mktemp -d)"
 
-  echo 'import sys; sys.exit(0 if sys.displayhook is not sys.__displayhook__ else 1)' |
-    ISSL_PYTHON_HOME="${issl_python_home}" \
+  echo 'import sys; sys.exit(0 if sys.displayhook is not sys.__displayhook__ else 1)' \
+    | ISSL_PYTHON_HOME="${issl_python_home}" \
       PYTHONSTARTUP="${pythonrc_path}" \
       PYTHON_HISTORY="${marker_dir}/history" \
       TERM=dumb \

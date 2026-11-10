@@ -15,9 +15,9 @@ _issl_test_failed() {
   if ((BASH_SUBSHELL == 0)); then
     # Show the calling source line when the failure came from a return of a function.
     if [[ ${command} == return || ${command} == 'return '* ]]; then
-      source_line="$(sed -n "${BASH_LINENO[0]}s/^[[:space:]]*//p" "${BASH_SOURCE[1]}" 2>/dev/null)" &&
-        [[ -n ${source_line} ]] &&
-        command="${source_line}"
+      source_line="$(sed -n "${BASH_LINENO[0]}s/^[[:space:]]*//p" "${BASH_SOURCE[1]}" 2> /dev/null)" \
+        && [[ -n ${source_line} ]] \
+        && command="${source_line}"
     fi
     printf 'FAILED: %s:%s: %s (exit %s)\n' \
       "${BASH_SOURCE[1]##*/}" "${BASH_LINENO[0]}" "${command}" "${status}" >&2

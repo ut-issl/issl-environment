@@ -13,7 +13,7 @@ test_xdg_data_dirs_are_exported() {
     SHELL_ENV_PATH="${config_dir}/issl/shell/env.sh" \
     XDG_CONFIG_HOME="${config_dir}" \
     PATH='/usr/bin:/bin' \
-    bash <<'EOF'
+    bash << 'EOF'
 . "${SHELL_ENV_PATH}"
 case ":${XDG_DATA_DIRS}:" in
 *:"${HOME}/.nix-profile/share":*) ;;

@@ -35,8 +35,8 @@ resolves_into_nix_store() {
 
   resolved_path="$(readlink -m "${path}")" || return 1
   case "${resolved_path}" in
-  /nix/store/*) return 0 ;;
-  *) return 1 ;;
+    /nix/store/*) return 0 ;;
+    *) return 1 ;;
   esac
 }
 
@@ -52,7 +52,7 @@ guard_against_existing_home_manager_files() {
   if zshenv_defines_zdotdir "${zshenv_path}"; then
     if resolved_zdotdir="$(resolve_zdotdir_from_zshenv "${zshenv_path}")"; then
       zdotdir_path="${resolved_zdotdir}"
-    elif [[ ${zsh_enabled} == '1' ]] && resolve_zsh_bin >/dev/null; then
+    elif [[ ${zsh_enabled} == '1' ]] && resolve_zsh_bin > /dev/null; then
       echo "error: ${zshenv_path} defines ZDOTDIR, but it could not be resolved before the Home Manager switch." >&2
       echo "Fix ${zshenv_path} so that zsh can evaluate it, or re-run with ISSL_ENABLE_ZSH=no to skip the zsh setup." >&2
       exit 1
@@ -134,7 +134,7 @@ prepend_block_once() {
       printf '\n'
       cat "${file_path}"
     fi
-  } >"${temp_file}"
+  } > "${temp_file}"
   mv "${temp_file}" "${file_path}"
   chmod "${original_mode}" "${file_path}"
 }
@@ -170,7 +170,7 @@ replace_with_block_once() {
     printf '%s\n' "${begin_marker}"
     printf '%s\n' "${block_content}"
     printf '%s\n' "${end_marker}"
-  } >"${temp_file}"
+  } > "${temp_file}"
 
   if [[ -n ${backup_path} ]]; then
     mv "${file_path}" "${backup_path}"
@@ -183,15 +183,15 @@ replace_with_block_once() {
 
 is_yes() {
   case "${1-}" in
-  y | Y | yes | YES | Yes | true | TRUE | True | 1) return 0 ;;
-  *) return 1 ;;
+    y | Y | yes | YES | Yes | true | TRUE | True | 1) return 0 ;;
+    *) return 1 ;;
   esac
 }
 
 is_no() {
   case "${1-}" in
-  n | N | no | NO | No | false | FALSE | False | 0) return 0 ;;
-  *) return 1 ;;
+    n | N | no | NO | No | false | FALSE | False | 0) return 0 ;;
+    *) return 1 ;;
   esac
 }
 
@@ -315,7 +315,7 @@ resolve_zdotdir_from_zshenv() {
 
   if [[ -x "${HOME}/.nix-profile/bin/zsh" ]]; then
     zsh_bin="${HOME}/.nix-profile/bin/zsh"
-  elif command -v zsh >/dev/null 2>&1; then
+  elif command -v zsh > /dev/null 2>&1; then
     zsh_bin="$(command -v zsh)"
   else
     return 1
@@ -333,14 +333,14 @@ resolve_zdotdir_from_zshenv() {
         if [ -n "${ZDOTDIR:-}" ]; then
           print -r -- "${ZDOTDIR:A}"
         fi
-      ' _ "${zshenv_path}" </dev/null
+      ' _ "${zshenv_path}" < /dev/null
   )"
   [[ -n ${resolved_value} ]] || return 1
   printf '%s\n' "${resolved_value}"
 }
 
 zshenv_default_block() {
-  cat <<'ZSHENV_EOF'
+  cat << 'ZSHENV_EOF'
 if [ -z "${ZDOTDIR:-}" ]; then
   export ZDOTDIR="${XDG_CONFIG_HOME:-$HOME/.config}/zsh"
 fi
@@ -402,7 +402,7 @@ resolve_zsh_bin() {
     return 0
   fi
 
-  if command -v zsh >/dev/null 2>&1; then
+  if command -v zsh > /dev/null 2>&1; then
     command -v zsh
     return 0
   fi
@@ -418,7 +418,7 @@ resolve_git_bin() {
     return 0
   fi
 
-  if command -v git >/dev/null 2>&1; then
+  if command -v git > /dev/null 2>&1; then
     command -v git
     return 0
   fi
@@ -437,7 +437,7 @@ prompt_for_git_identity() {
   local git_email=''
   local missing_identity=0
 
-  if ! git_name="$("${git_bin}" config --global --get user.name 2>/dev/null)" || [[ -z ${git_name} ]]; then
+  if ! git_name="$("${git_bin}" config --global --get user.name 2> /dev/null)" || [[ -z ${git_name} ]]; then
     if [[ -n ${git_user_name} ]]; then
       git_name="${git_user_name}"
     elif [[ -t 0 ]]; then
@@ -451,7 +451,7 @@ prompt_for_git_identity() {
     fi
   fi
 
-  if ! git_email="$("${git_bin}" config --global --get user.email 2>/dev/null)" || [[ -z ${git_email} ]]; then
+  if ! git_email="$("${git_bin}" config --global --get user.email 2> /dev/null)" || [[ -z ${git_email} ]]; then
     if [[ -n ${git_user_email} ]]; then
       git_email="${git_user_email}"
     elif [[ -t 0 ]]; then
@@ -473,7 +473,7 @@ prompt_for_git_identity() {
 # ===== Python ===== #
 
 pythonrc_block() {
-  cat <<'PYTHON_EOF'
+  cat << 'PYTHON_EOF'
 import os
 from pathlib import Path
 import runpy
@@ -535,7 +535,7 @@ ensure_cargo_config_include() {
 }
 
 main() {
-  if ! command -v nix >/dev/null 2>&1; then
+  if ! command -v nix > /dev/null 2>&1; then
     echo 'nix is required before running scripts/apply.sh.' >&2
     exit 1
   fi

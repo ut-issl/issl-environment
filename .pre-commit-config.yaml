@@ -57,7 +57,7 @@ repos:
     rev: 479be5958357ba5ab65ce47172117348516860e9  # frozen: v3.14.1-1
     hooks:
       - id: shfmt
-        args: [--write, --simplify, --indent=2]
+        args: [--write, --simplify, --indent=2, --binary-next-line, --case-indent, --space-redirects]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0

@@ -15,12 +15,12 @@ test_rustup_installation() {
 }
 
 test_rustc_installation() {
-  command -v rustc >/dev/null 2>&1
+  command -v rustc > /dev/null 2>&1
   rustc --version
 }
 
 test_cargo_installation() {
-  command -v cargo >/dev/null 2>&1
+  command -v cargo > /dev/null 2>&1
   cargo --version
 }
 
