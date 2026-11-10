@@ -12,7 +12,7 @@ _issl_test_failed() {
   local source_line
 
   # Report only from the top-level shell, not from subshells or command substitutions.
-  if ((BASH_SUBSHELL == 0)); then
+  if [[ ${BASH_SUBSHELL} -eq 0 ]]; then
     # Show the calling source line when the failure came from a return of a function.
     if [[ ${command} == return || ${command} == 'return '* ]]; then
       source_line="$(sed -n "${BASH_LINENO[0]}s/^[[:space:]]*//p" "${BASH_SOURCE[1]}" 2> /dev/null)" \
