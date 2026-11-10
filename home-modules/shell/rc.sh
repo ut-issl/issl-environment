@@ -14,7 +14,7 @@ fi
 # ===== Functions and Aliases ===== #
 
 # Configure GNU-style color output for common tools when available.
-if command -v dircolors >/dev/null 2>&1; then
+if command -v dircolors > /dev/null 2>&1; then
   # Prefer ~/.dircolors, then the shared ISSL file.
   issl_dircolors_path="${ISSL_SHELL_HOME}/.dircolors"
   if [ -r "${HOME}/.dircolors" ]; then
@@ -49,7 +49,7 @@ alias lr='ls -R'  # Recursive listing.
 alias lra='lr -A' # Recursive listing including hidden files except the . and .. entries.
 
 # Use colordiff when available, otherwise keep unified diff output.
-if command -v colordiff >/dev/null 2>&1; then
+if command -v colordiff > /dev/null 2>&1; then
   alias diff='colordiff -u' # Unified diff with color.
 else
   alias diff='diff -u' # Unified diff without color.

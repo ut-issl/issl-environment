@@ -19,8 +19,8 @@ test_shared_git_config() {
 
 test_global_git_include() {
   HOME="${home_dir}" XDG_CONFIG_HOME="${config_dir}" \
-    git config --global --get-all include.path |
-    grep -Fx "${config_dir}/issl/git/.gitconfig"
+    git config --global --get-all include.path \
+    | grep -Fx "${config_dir}/issl/git/.gitconfig"
 }
 
 test_git_identity() {

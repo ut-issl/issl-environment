@@ -19,9 +19,9 @@ export CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
 # Replace $SHELL with the shell that the managed login shell link resolves to.
 issl_login_shell_link="${XDG_STATE_HOME}/issl/login-shell"
 if [ "${SHELL:-}" = "${issl_login_shell_link}" ]; then
-  case "$(readlink -f "${issl_login_shell_link}" 2>/dev/null)" in
-  */bin/zsh) export SHELL="${ISSL_NIX_PROFILE_PATH}/bin/zsh" ;;
-  */bin/bash) export SHELL="/bin/bash" ;;
+  case "$(readlink -f "${issl_login_shell_link}" 2> /dev/null)" in
+    */bin/zsh) export SHELL="${ISSL_NIX_PROFILE_PATH}/bin/zsh" ;;
+    */bin/bash) export SHELL="/bin/bash" ;;
   esac
 fi
 unset issl_login_shell_link
@@ -32,8 +32,8 @@ prepend_path() {
   [ -d "$1" ] || return 0
 
   case ":${PATH}:" in
-  *:"$1":*) ;;
-  *) PATH="$1${PATH:+:$PATH}" ;;
+    *:"$1":*) ;;
+    *) PATH="$1${PATH:+:$PATH}" ;;
   esac
 }
 

@@ -9,7 +9,7 @@ ssh_config_path="${ssh_dir}/config"
 require_command() {
   local command_name="$1"
 
-  if ! command -v "${command_name}" >/dev/null 2>&1; then
+  if ! command -v "${command_name}" > /dev/null 2>&1; then
     echo "required command not found: ${command_name}" >&2
     exit 1
   fi
@@ -21,15 +21,15 @@ is_interactive() {
 
 is_yes() {
   case "${1-}" in
-  y | Y | yes | YES | Yes | true | TRUE | True | 1) return 0 ;;
-  *) return 1 ;;
+    y | Y | yes | YES | Yes | true | TRUE | True | 1) return 0 ;;
+    *) return 1 ;;
   esac
 }
 
 is_no() {
   case "${1-}" in
-  n | N | no | NO | No | false | FALSE | False | 0) return 0 ;;
-  *) return 1 ;;
+    n | N | no | NO | No | false | FALSE | False | 0) return 0 ;;
+    *) return 1 ;;
   esac
 }
 
@@ -55,7 +55,7 @@ prompt_yes_no() {
 }
 
 source_nix() {
-  if command -v nix >/dev/null 2>&1; then
+  if command -v nix > /dev/null 2>&1; then
     return
   fi
 
@@ -69,7 +69,7 @@ source_nix() {
     . "${HOME}/.nix-profile/etc/profile.d/nix.sh"
   fi
 
-  if ! command -v nix >/dev/null 2>&1; then
+  if ! command -v nix > /dev/null 2>&1; then
     echo 'nix is installed but was not added to PATH in the current shell.' >&2
     exit 1
   fi
@@ -78,7 +78,7 @@ source_nix() {
 ensure_nix() {
   local installer_script=''
 
-  if command -v nix >/dev/null 2>&1; then
+  if command -v nix > /dev/null 2>&1; then
     return
   fi
 
@@ -97,11 +97,11 @@ ensure_nix() {
 }
 
 is_systemd_available() {
-  [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1
+  [[ -d /run/systemd/system ]] && command -v systemctl > /dev/null 2>&1
 }
 
 resolve_nix_daemon_path() {
-  if command -v nix-daemon >/dev/null 2>&1; then
+  if command -v nix-daemon > /dev/null 2>&1; then
     command -v nix-daemon
     return 0
   fi
@@ -121,7 +121,7 @@ start_nix_daemon_without_systemd() {
     return
   fi
 
-  if pgrep --exact nix-daemon >/dev/null 2>&1; then
+  if pgrep --exact nix-daemon > /dev/null 2>&1; then
     return
   fi
 
@@ -131,25 +131,25 @@ start_nix_daemon_without_systemd() {
   fi
 
   if [[ ${EUID} -eq 0 ]]; then
-    setsid "${nix_daemon_path}" --daemon >/dev/null 2>&1 &
-  elif command -v sudo >/dev/null 2>&1; then
+    setsid "${nix_daemon_path}" --daemon > /dev/null 2>&1 &
+  elif command -v sudo > /dev/null 2>&1; then
     if [[ -t 0 ]]; then
       if ! sudo --validate; then
         echo 'warning: failed to authenticate via sudo. Nix commands may fail.' >&2
         return
       fi
-    elif ! sudo --non-interactive true >/dev/null 2>&1; then
+    elif ! sudo --non-interactive true > /dev/null 2>&1; then
       echo 'warning: cannot start nix-daemon automatically (sudo requires a password in non-interactive mode).' >&2
       return
     fi
-    sudo --non-interactive setsid "${nix_daemon_path}" --daemon >/dev/null 2>&1 &
+    sudo --non-interactive setsid "${nix_daemon_path}" --daemon > /dev/null 2>&1 &
   else
     echo 'warning: cannot start nix-daemon automatically (sudo is unavailable in a no-systemd environment).' >&2
     return
   fi
 
   for _ in {1..10}; do
-    if nix --extra-experimental-features 'nix-command flakes' store info >/dev/null 2>&1; then
+    if nix --extra-experimental-features 'nix-command flakes' store info > /dev/null 2>&1; then
       return
     fi
     sleep 1
@@ -167,7 +167,7 @@ is_executable_file() {
 }
 
 current_login_shell() {
-  if command -v getent >/dev/null 2>&1; then
+  if command -v getent > /dev/null 2>&1; then
     getent passwd "${EUID}" | cut -d: -f7
     return 0
   fi
@@ -197,19 +197,19 @@ etc_shells_entry() {
 ensure_shell_listed_in_etc_shells() {
   local shell_path="$1"
 
-  if grep -Fxq "${shell_path}" /etc/shells 2>/dev/null; then
+  if grep -Fxq "${shell_path}" /etc/shells 2> /dev/null; then
     return 0
   fi
 
   if [[ -w /etc/shells ]]; then
-    if etc_shells_entry "${shell_path}" >>/etc/shells; then
+    if etc_shells_entry "${shell_path}" >> /etc/shells; then
       return 0
     fi
     echo "warning: failed to append ${shell_path} to /etc/shells directly." >&2
   fi
 
-  if command -v sudo >/dev/null 2>&1; then
-    if etc_shells_entry "${shell_path}" | sudo tee -a /etc/shells >/dev/null; then
+  if command -v sudo > /dev/null 2>&1; then
+    if etc_shells_entry "${shell_path}" | sudo tee -a /etc/shells > /dev/null; then
       return 0
     fi
     echo "warning: failed to add ${shell_path} to /etc/shells via sudo. Skipping login shell registration." >&2
@@ -272,8 +272,8 @@ has_github_ssh_auth() {
   ssh_output="$(nix_with_openssh ssh -o ConnectTimeout=10 -T git@github.com 2>&1)" || ssh_status="$?"
   ssh_status="${ssh_status:-0}"
 
-  if [[ ${ssh_status} -eq 1 ]] &&
-    printf '%s\n' "${ssh_output}" | grep -Fq 'successfully authenticated'; then
+  if [[ ${ssh_status} -eq 1 ]] \
+    && printf '%s\n' "${ssh_output}" | grep -Fq 'successfully authenticated'; then
     return 0
   fi
 
@@ -308,8 +308,8 @@ create_github_ssh_key() {
 ensure_github_ssh_config() {
   ensure_ssh_directory
 
-  if [[ -f ${ssh_config_path} ]] &&
-    grep -Eq '^[[:space:]]*[Hh][Oo][Ss][Tt][[:space:]]+github\.com([[:space:]]|$)' "${ssh_config_path}"; then
+  if [[ -f ${ssh_config_path} ]] \
+    && grep -Eq '^[[:space:]]*[Hh][Oo][Ss][Tt][[:space:]]+github\.com([[:space:]]|$)' "${ssh_config_path}"; then
     return
   fi
 
@@ -318,7 +318,7 @@ ensure_github_ssh_config() {
     echo '  HostName github.com'
     echo '  User git'
     echo '  IdentityFile ~/.ssh/github_ed25519'
-  } >>"${ssh_config_path}"
+  } >> "${ssh_config_path}"
   chmod 600 "${ssh_config_path}"
 }
 
@@ -420,7 +420,7 @@ should_install_docker() {
     return 1
   fi
 
-  if ! docker_apt_repository >/dev/null; then
+  if ! docker_apt_repository > /dev/null; then
     echo 'warning: Docker Engine setup supports only Ubuntu, its derivatives, and Debian stable releases; skipping it. Install Docker Engine through your distribution if you need it.' >&2
     return 1
   fi
@@ -476,15 +476,15 @@ install_docker_engine() {
   require_command gpg
   sudo install -m 0755 -d "${apt_keyrings_dir}"
 
-  curl --fail --location --show-error --silent "https://download.docker.com/linux/${distribution}/gpg" |
-    gpg --dearmor |
-    sudo tee "${apt_keyrings_dir}/docker.gpg" >/dev/null
+  curl --fail --location --show-error --silent "https://download.docker.com/linux/${distribution}/gpg" \
+    | gpg --dearmor \
+    | sudo tee "${apt_keyrings_dir}/docker.gpg" > /dev/null
   sudo chmod a+r "${apt_keyrings_dir}/docker.gpg"
 
   architecture="$(dpkg --print-architecture)"
   printf 'deb [arch=%s signed-by=%s/docker.gpg] https://download.docker.com/linux/%s %s stable\n' \
-    "${architecture}" "${apt_keyrings_dir}" "${distribution}" "${suite}" |
-    sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+    "${architecture}" "${apt_keyrings_dir}" "${distribution}" "${suite}" \
+    | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
   sudo apt-get update
   sudo apt-get --no-install-recommends --yes install docker-ce docker-ce-cli containerd.io pigz
@@ -496,7 +496,7 @@ install_docker_engine() {
     echo "Log out and back in, or run 'newgrp docker', before using Docker without sudo."
   fi
 
-  if command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
+  if command -v systemctl > /dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
     sudo systemctl enable --now docker.service
   fi
 }

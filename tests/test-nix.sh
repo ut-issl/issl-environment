@@ -11,7 +11,7 @@ issl_nix_config_path="${config_dir}/issl/nix/nix.conf"
 source "${common_dir}/tests/lib.sh"
 
 test_nix_installation() {
-  command -v nix >/dev/null
+  command -v nix > /dev/null
   nix --version
 }
 
@@ -28,7 +28,7 @@ test_nix_command_available_without_extra_flags() {
   env \
     HOME="${home_dir}" \
     XDG_CONFIG_HOME="${config_dir}" \
-    nix profile list >/dev/null
+    nix profile list > /dev/null
 }
 
 test_home_manager_installation() {

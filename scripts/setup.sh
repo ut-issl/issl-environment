@@ -15,19 +15,19 @@ github_repository_path() {
   local repo=''
 
   case "${repo_url}" in
-  https://github.com/*)
-    path="${repo_url#https://github.com/}"
-    ;;
-  git@github.com:*)
-    path="${repo_url#git@github.com:}"
-    ;;
-  ssh://git@github.com/*)
-    path="${repo_url#ssh://git@github.com/}"
-    ;;
-  *)
-    echo "unsupported GitHub repository URL for bootstrap download: ${repo_url}" >&2
-    exit 1
-    ;;
+    https://github.com/*)
+      path="${repo_url#https://github.com/}"
+      ;;
+    git@github.com:*)
+      path="${repo_url#git@github.com:}"
+      ;;
+    ssh://git@github.com/*)
+      path="${repo_url#ssh://git@github.com/}"
+      ;;
+    *)
+      echo "unsupported GitHub repository URL for bootstrap download: ${repo_url}" >&2
+      exit 1
+      ;;
   esac
 
   path="${path%.git}"
@@ -50,12 +50,12 @@ github_repository_path() {
 
 bootstrap_repository_path() {
   case "${repo_url}" in
-  git@github.com:* | ssh://git@github.com/*)
-    printf '%s\n' "${default_bootstrap_repository_path}"
-    ;;
-  *)
-    github_repository_path
-    ;;
+    git@github.com:* | ssh://git@github.com/*)
+      printf '%s\n' "${default_bootstrap_repository_path}"
+      ;;
+    *)
+      github_repository_path
+      ;;
   esac
 }
 
@@ -66,12 +66,12 @@ bootstrap_ref() {
   fi
 
   case "${repo_url}" in
-  git@github.com:* | ssh://git@github.com/*)
-    printf '%s\n' "${default_repo_ref}"
-    ;;
-  *)
-    printf '%s\n' "${repo_ref}"
-    ;;
+    git@github.com:* | ssh://git@github.com/*)
+      printf '%s\n' "${default_repo_ref}"
+      ;;
+    *)
+      printf '%s\n' "${repo_ref}"
+      ;;
   esac
 }
 
@@ -97,13 +97,13 @@ release_bootstrap_url() {
 
 default_bootstrap_urls() {
   case "$(bootstrap_ref)" in
-  v*)
-    release_bootstrap_url
-    raw_bootstrap_url
-    ;;
-  *)
-    raw_bootstrap_url
-    ;;
+    v*)
+      release_bootstrap_url
+      raw_bootstrap_url
+      ;;
+    *)
+      raw_bootstrap_url
+      ;;
   esac
 }
 
@@ -123,7 +123,7 @@ load_bootstrap_host() {
 
   bootstrap_urls="${BOOTSTRAP_URL:-$(default_bootstrap_urls)}"
 
-  if ! command -v curl >/dev/null 2>&1; then
+  if ! command -v curl > /dev/null 2>&1; then
     echo 'required command not found: curl' >&2
     exit 1
   fi
@@ -140,7 +140,7 @@ load_bootstrap_host() {
       rm -f "${temporary_bootstrap}"
       return
     fi
-  done <<<"${bootstrap_urls}"
+  done <<< "${bootstrap_urls}"
 
   echo 'failed to download bootstrap-host.sh.' >&2
   exit 1
@@ -155,17 +155,17 @@ nix_git() {
 }
 
 can_access_repo() {
-  nix_git ls-remote --exit-code "${repo_url}" "${repo_ref}" >/dev/null 2>&1
+  nix_git ls-remote --exit-code "${repo_url}" "${repo_ref}" > /dev/null 2>&1
 }
 
 is_github_ssh_repo_url() {
   case "${repo_url}" in
-  git@github.com:* | ssh://git@github.com/*)
-    return 0
-    ;;
-  *)
-    return 1
-    ;;
+    git@github.com:* | ssh://git@github.com/*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
   esac
 }
 
@@ -184,7 +184,7 @@ try_github_ssh_recovery() {
 }
 
 fail_repo_access() {
-  cat >&2 <<EOF
+  cat >&2 << EOF
 failed to access ${repo_url}.
 confirm that:
 - if this is a GitHub SSH remote, your SSH key is registered with GitHub

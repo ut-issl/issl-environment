@@ -26,7 +26,7 @@ test_shell_env_can_be_sourced() {
     SHELL_ENV_PATH="${config_dir}/issl/shell/env.sh" \
     XDG_CONFIG_HOME="${config_dir}" \
     PATH='/usr/bin:/bin' \
-    bash -e <<'EOF'
+    bash -e << 'EOF'
 . "${SHELL_ENV_PATH}"
 test "${ISSL_CONFIG_HOME}" = "${XDG_CONFIG_HOME}/issl"
 test "${ISSL_PYTHON_HOME}" = "${XDG_CONFIG_HOME}/issl/python"
@@ -77,7 +77,7 @@ test_shared_shell_tools() {
   dircolors --version
 
   assert_command_path "${nix_profile_bin}/ls"
-  ls --classify=auto -d . >/dev/null
+  ls --classify=auto -d . > /dev/null
 }
 
 test_shellcheck_installation() {
@@ -145,7 +145,7 @@ assert_shell_variable_is_corrected() {
     SHELL="${login_shell_link}" \
     EXPECTED_SHELL="${expected}" \
     PATH='/usr/bin:/bin' \
-    "${shell_bin}" <<'EOF'
+    "${shell_bin}" << 'EOF'
 . "${SHELL_ENV_PATH}"
 test "${SHELL}" = "${EXPECTED_SHELL}"
 EOF

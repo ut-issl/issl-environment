@@ -137,7 +137,7 @@ jobs:
             XDG_DATA_HOME="${DATA_DIR}" \
             XDG_STATE_HOME="${STATE_DIR}" \
             nix run '.#home-manager' -- \
-              switch --flake ".#${FLAKE_TARGET}" "${switch_args[@]}"
+            switch --flake ".#${FLAKE_TARGET}" "${switch_args[@]}"
 
       - name: Add Home Manager profile to PATH
         env:

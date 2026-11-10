@@ -36,8 +36,8 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           pull_request="$(gh api "repos/{owner}/{repo}/pulls/${PR_NUMBER}")"
-          title="$(jq --raw-output '.title' <<<"${pull_request}")"
-          mapfile -t current_labels < <(jq --raw-output '.labels[].name' <<<"${pull_request}")
+          title="$(jq --raw-output '.title' <<< "${pull_request}")"
+          mapfile -t current_labels < <(jq --raw-output '.labels[].name' <<< "${pull_request}")
 
           title_pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^[:space:]]+\))?(!)?: '
           wanted_labels=()
@@ -51,13 +51,13 @@ jobs:
           for label in "${current_labels[@]}"; do
             if [[ (${label} == type::* || ${label} == 'breaking') && " ${wanted_labels[*]} " != *" ${label} "* ]]; then
               encoded_label="$(jq --null-input --raw-output --arg label "${label}" '$label | @uri')"
-              gh api "repos/{owner}/{repo}/issues/${PR_NUMBER}/labels/${encoded_label}" --method=DELETE >/dev/null
+              gh api "repos/{owner}/{repo}/issues/${PR_NUMBER}/labels/${encoded_label}" --method=DELETE > /dev/null
             fi
           done
 
           if [[ ${#wanted_labels[@]} -gt 0 ]]; then
             jq --null-input --args '{labels: $ARGS.positional}' "${wanted_labels[@]}" \
-              | gh api "repos/{owner}/{repo}/issues/${PR_NUMBER}/labels" --method=POST --input=- >/dev/null
+              | gh api "repos/{owner}/{repo}/issues/${PR_NUMBER}/labels" --method=POST --input=- > /dev/null
           fi
 
   lint-pull-request-title:
