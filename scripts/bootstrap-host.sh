@@ -91,7 +91,7 @@ ensure_nix() {
   require_command curl
   require_command sh
 
-  installer_script="$(curl --proto '=https' --tlsv1.2 --fail -L https://nixos.org/nix/install)"
+  installer_script="$(curl --fail --location --proto '=https' --tlsv1.2 https://nixos.org/nix/install)"
   sh -c "${installer_script}" nix-install --daemon
   source_nix
 }
@@ -299,9 +299,9 @@ create_github_ssh_key() {
   fi
 
   if [[ -n ${key_comment} ]]; then
-    nix_with_openssh ssh-keygen -t ed25519 -C "${key_comment}" -f "${github_key_path}"
+    nix_with_openssh ssh-keygen -C "${key_comment}" -f "${github_key_path}" -t ed25519
   else
-    nix_with_openssh ssh-keygen -t ed25519 -f "${github_key_path}"
+    nix_with_openssh ssh-keygen -f "${github_key_path}" -t ed25519
   fi
 }
 

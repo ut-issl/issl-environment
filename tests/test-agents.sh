@@ -17,7 +17,7 @@ _assert_execpolicy_decision() {
   local decision
   shift
 
-  decision="$(codex execpolicy check -r "${codex_rules_path}" -- "$@" | jq -r '.decision // "none"')"
+  decision="$(codex execpolicy check --rules="${codex_rules_path}" -- "$@" | jq --raw-output '.decision // "none"')"
   assert_equal "${decision}" "${expected}" || return 1
 }
 
