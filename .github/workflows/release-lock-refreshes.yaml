@@ -1,0 +1,305 @@
+name: Release lock refreshes
+
+on:
+  schedule:
+    - cron: '15 13 * * 1'
+    - cron: '15 19 * * 1'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Whether to report the decision without requesting a release'
+        required: false
+        default: false
+        type: boolean
+
+defaults:
+  run:
+    shell: bash
+
+permissions: {}
+
+jobs:
+  release-lock-refreshes:
+    name: Release lock refreshes
+    concurrency:
+      group: lock-refresh-release
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Determine the baseline
+        id: baseline
+        run: |
+          tag=''
+          while IFS= read -r candidate; do
+            if [[ ${candidate} =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              tag="${candidate}"
+              break
+            fi
+          done < <(git tag --list --merged=HEAD --sort=-version:refname 'v*')
+          if [[ -z ${tag} ]]; then
+            echo '::error title=baseline::No vX.Y.Z tag is reachable from the checked-out commit.'
+            exit 1
+          fi
+
+          base_commit="$(git rev-parse "${tag}^{commit}")"
+          head_commit="$(git rev-parse HEAD)"
+          {
+            echo "tag=${tag}"
+            echo "base-commit=${base_commit}"
+            echo "head-commit=${head_commit}"
+          } >> "${GITHUB_OUTPUT}"
+
+          {
+            echo '## Release lock refreshes'
+            echo
+            echo "- Baseline: \`${tag}\` (\`${base_commit}\`)"
+            echo "- Head: \`${head_commit}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
+          if [[ ${base_commit} == "${head_commit}" ]]; then
+            echo '- Decision: no release needed, as nothing was merged since the baseline' >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+      - name: Check for a release in progress
+        id: release-in-progress
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          bump_pull_requests="$(gh pr list --state=open --limit=100 --json=createdAt,headRefName,url \
+            --jq='[.[] | select(.headRefName | startswith("workflow/bump-version-"))]')"
+          stale_urls="$(jq --raw-output '.[] | select((.createdAt | fromdateiso8601) < now - 3600) | .url' \
+            <<< "${bump_pull_requests}")"
+          if [[ -n ${stale_urls} ]]; then
+            while IFS= read -r url; do
+              echo "::error title=release-in-progress::A version bump pull request is over an hour old: ${url}"
+            done <<< "${stale_urls}"
+            exit 1
+          fi
+
+          open_count="$(jq 'length' <<< "${bump_pull_requests}")"
+          active_count="$(gh run list --workflow=bump-version.yaml --limit=100 --json=status \
+            --jq='[.[] | select(.status != "completed")] | length')"
+          if [[ ${open_count} -gt 0 || ${active_count} -gt 0 ]]; then
+            echo '::warning title=release-in-progress::A version bump is in progress; deferring the decision.'
+            echo '- Decision: deferred, as a version bump is in progress' >> "${GITHUB_STEP_SUMMARY}"
+            echo 'deferred=true' >> "${GITHUB_OUTPUT}"
+          else
+            echo 'deferred=false' >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Install Nix
+        if: >-
+          steps.release-in-progress.outputs.deferred == 'false'
+          && steps.baseline.outputs.base-commit != steps.baseline.outputs.head-commit
+        uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # 31.11.3
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compare the environments
+        id: compare
+        if: >-
+          steps.release-in-progress.outputs.deferred == 'false'
+          && steps.baseline.outputs.base-commit != steps.baseline.outputs.head-commit
+        env:
+          BASE_COMMIT: ${{ steps.baseline.outputs.base-commit }}
+          HEAD_COMMIT: ${{ steps.baseline.outputs.head-commit }}
+        run: |
+          work_dir="$(mktemp -d)"
+          targets_expression='
+            checks:
+            with builtins;
+            concatLists (
+              attrValues (
+                mapAttrs (
+                  system: systemChecks:
+                  map (check: "checks." + system + "." + check) (
+                    filter (check: ((getAttr check systemChecks).name or "") == "home-manager-generation") (
+                      attrNames systemChecks
+                    )
+                  )
+                ) checks
+              )
+            )
+          '
+
+          list_targets() {
+            local commit="$1"
+            local prefix="$2"
+            nix eval --apply "${targets_expression}" --json "git+file://${GITHUB_WORKSPACE}?rev=${commit}#checks" \
+              > "${prefix}.json"
+            jq --raw-output '.[]' "${prefix}.json" | LC_ALL=C sort > "${prefix}.list"
+            if [[ ! -s "${prefix}.list" ]]; then
+              echo "::error title=compare::Found no Home Manager activation packages in the checks of ${commit}."
+              exit 1
+            fi
+          }
+
+          show_derivations() {
+            local commit="$1"
+            local attribute="$2"
+            local prefix="$3"
+            local format_version
+            local files_count
+            nix derivation show --recursive "git+file://${GITHUB_WORKSPACE}?rev=${commit}#${attribute}" \
+              > "${prefix}.json"
+            format_version="$(jq '.version' "${prefix}.json")"
+            if [[ ${format_version} != '4' ]]; then
+              echo "::error title=compare::Unsupported derivation format version ${format_version} for ${attribute}."
+              exit 1
+            fi
+
+            jq --raw-output '
+                .derivations[]
+                | .name, (.inputs.srcs[] | "src " + sub("^[0-9a-z]{32}-"; ""))
+              ' "${prefix}.json" | LC_ALL=C sort > "${prefix}.names"
+
+            jq --raw-output '.derivations | to_entries[] | select(.value.name == "home-manager-files") | .key' \
+              "${prefix}.json" > "${prefix}.files"
+            files_count="$(wc -l < "${prefix}.files")"
+            if [[ ${files_count} -ne 1 ]]; then
+              echo "::error title=compare::Found ${files_count} home-manager-files derivations in ${attribute}."
+              exit 1
+            fi
+          }
+
+          list_targets "${BASE_COMMIT}" "${work_dir}/targets.base"
+          list_targets "${HEAD_COMMIT}" "${work_dir}/targets.head"
+          base_targets="${work_dir}/targets.base.list"
+          head_targets="${work_dir}/targets.head.list"
+          LC_ALL=C comm -23 "${base_targets}" "${head_targets}" > "${work_dir}/targets.removed"
+          LC_ALL=C comm -13 "${base_targets}" "${head_targets}" > "${work_dir}/targets.added"
+          LC_ALL=C comm -12 "${base_targets}" "${head_targets}" > "${work_dir}/targets.common"
+
+          changed='false'
+          if [[ -s "${work_dir}/targets.removed" || -s "${work_dir}/targets.added" ]]; then
+            changed='true'
+            while IFS= read -r attribute; do
+              echo "- \`${attribute}\`: removed" >> "${GITHUB_STEP_SUMMARY}"
+            done < "${work_dir}/targets.removed"
+            while IFS= read -r attribute; do
+              echo "- \`${attribute}\`: added" >> "${GITHUB_STEP_SUMMARY}"
+            done < "${work_dir}/targets.added"
+          fi
+
+          mapfile -t attributes < "${work_dir}/targets.common"
+          for attribute in "${attributes[@]}"; do
+            show_derivations "${BASE_COMMIT}" "${attribute}" "${work_dir}/${attribute}.base"
+            show_derivations "${HEAD_COMMIT}" "${attribute}" "${work_dir}/${attribute}.head"
+
+            names_status=0
+            cmp --quiet "${work_dir}/${attribute}.base.names" "${work_dir}/${attribute}.head.names" || names_status=$?
+            files_status=0
+            cmp --quiet "${work_dir}/${attribute}.base.files" "${work_dir}/${attribute}.head.files" || files_status=$?
+            if [[ ${names_status} -gt 1 || ${files_status} -gt 1 ]]; then
+              echo "::error title=compare::Failed to compare the derivations of ${attribute}."
+              exit 1
+            fi
+
+            if [[ ${names_status} -eq 0 && ${files_status} -eq 0 ]]; then
+              echo "- \`${attribute}\`: unchanged" >> "${GITHUB_STEP_SUMMARY}"
+              continue
+            fi
+
+            changed='true'
+            {
+              echo "- \`${attribute}\`: changed"
+              if [[ ${files_status} -eq 1 ]]; then
+                base_files="$(< "${work_dir}/${attribute}.base.files")"
+                head_files="$(< "${work_dir}/${attribute}.head.files")"
+                echo "  - \`home-manager-files\`: \`${base_files}\` → \`${head_files}\`"
+              fi
+              if [[ ${names_status} -eq 1 ]]; then
+                diff "${work_dir}/${attribute}.base.names" "${work_dir}/${attribute}.head.names" \
+                  > "${work_dir}/${attribute}.diff" || [[ $? -eq 1 ]]
+                grep -E '^[<>]' "${work_dir}/${attribute}.diff" \
+                  | sed -e 's/^</-/' -e 's/^>/+/' -e 's/^/  /' > "${work_dir}/${attribute}.changes"
+                echo '  <details><summary>Derivation and source name changes</summary>'
+                echo
+                echo "  \`\`\`diff"
+                head -n 200 "${work_dir}/${attribute}.changes"
+                echo "  \`\`\`"
+                echo
+                echo '  </details>'
+              fi
+            } >> "${GITHUB_STEP_SUMMARY}"
+          done
+
+          echo "changed=${changed}" >> "${GITHUB_OUTPUT}"
+          if [[ ${changed} == 'false' ]]; then
+            echo '- Decision: no release needed, as the environment is unchanged' >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+      - name: Classify the changes since the baseline
+        id: classify
+        if: steps.compare.outputs.changed == 'true'
+        env:
+          BASE_COMMIT: ${{ steps.baseline.outputs.base-commit }}
+          HEAD_COMMIT: ${{ steps.baseline.outputs.head-commit }}
+        run: |
+          other_commits="$(git log --format='%an%x09%h %s' "${BASE_COMMIT}..${HEAD_COMMIT}" \
+            -- flake.nix flake.lock home-modules scripts \
+            | awk -F '\t' '$1 != "renovate[bot]" { print $2 }')"
+          if [[ -z ${other_commits} ]]; then
+            echo 'other-changes=false' >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          message='Unreleased changes other than lock refreshes affect the environment, so no release is requested;'
+          message+=' release them manually with the bump type they need.'
+          echo "::warning title=classify::${message}"
+          {
+            echo '- Decision: skipped, as unreleased changes other than lock refreshes affect the environment'
+            while IFS= read -r commit; do
+              echo "  - ${commit}"
+            done <<< "${other_commits}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+          echo 'other-changes=true' >> "${GITHUB_OUTPUT}"
+
+      - name: Request a patch release
+        if: steps.classify.outputs.other-changes == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          HEAD_COMMIT: ${{ steps.baseline.outputs.head-commit }}
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          remote_head="$(git ls-remote origin refs/heads/main | cut -f 1)"
+          if [[ -z ${remote_head} ]]; then
+            echo '::error title=release::Failed to read the head of main.'
+            exit 1
+          fi
+          if [[ ${remote_head} != "${HEAD_COMMIT}" ]]; then
+            echo '::warning title=release::main moved during the comparison; deferring the decision.'
+            echo '- Decision: deferred, as main moved during the comparison' >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          open_count="$(gh pr list --state=open --limit=100 --json=headRefName \
+            --jq='[.[] | select(.headRefName | startswith("workflow/bump-version-"))] | length')"
+          active_count="$(gh run list --workflow=bump-version.yaml --limit=100 --json=status \
+            --jq='[.[] | select(.status != "completed")] | length')"
+          if [[ ${open_count} -gt 0 || ${active_count} -gt 0 ]]; then
+            echo '::warning title=release::A version bump started during the comparison; deferring the decision.'
+            echo '- Decision: deferred, as a version bump started during the comparison' >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          if [[ ${DRY_RUN} == 'true' ]]; then
+            echo '- Decision: a patch release would be requested (dry run)' >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          gh workflow run bump-version.yaml --ref=main --raw-field=bump-type=patch
+          echo '- Decision: requested a patch release' >> "${GITHUB_STEP_SUMMARY}"

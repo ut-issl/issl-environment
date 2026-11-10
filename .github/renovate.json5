@@ -191,13 +191,10 @@
     },
   ],
   lockFileMaintenance: {
-    description: 'Skip the release-age gate, as nix flake update looks up no releases, so its updates carry no release timestamp and would otherwise keep the stability check pending forever; and allow the whole of Monday, as the few runs a day can miss the default window of the first four hours',
+    description: 'Skip the release-age gate, as nix flake update looks up no releases, so its updates carry no release timestamp and would otherwise keep the stability check pending forever; and refresh the locks during the first half of Monday',
     minimumReleaseAge: '0 days',
     schedule: [
-      '* * * * 1',
-    ],
-    addLabels: [
-      'update::patch',
+      '* 0-11 * * 1',
     ],
     automerge: true,
   },
