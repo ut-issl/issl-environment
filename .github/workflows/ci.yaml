@@ -263,7 +263,7 @@ jobs:
 
       - name: Suggest TOML formatting
         if: github.event_name == 'pull_request'
-        uses: reviewdog/action-suggester@ac5ce6d94e35c00530447dc63c271e38e4fd36c6 # v1.26.3
+        uses: reviewdog/action-suggester@295fd4e5482381f33925c46ca5c2f66c69370267 # v1.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tool_name: tombi-format
@@ -436,7 +436,7 @@ jobs:
 
       - name: Suggest Nix formatting
         if: github.event_name == 'pull_request'
-        uses: reviewdog/action-suggester@ac5ce6d94e35c00530447dc63c271e38e4fd36c6 # v1.26.3
+        uses: reviewdog/action-suggester@295fd4e5482381f33925c46ca5c2f66c69370267 # v1.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tool_name: nixfmt
@@ -527,7 +527,7 @@ jobs:
 
       - name: Suggest Python formatting
         if: github.event_name == 'pull_request'
-        uses: reviewdog/action-suggester@ac5ce6d94e35c00530447dc63c271e38e4fd36c6 # v1.26.3
+        uses: reviewdog/action-suggester@295fd4e5482381f33925c46ca5c2f66c69370267 # v1.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tool_name: ruff-format
@@ -599,7 +599,7 @@ jobs:
 
       - name: Suggest shell script formatting
         if: github.event_name == 'pull_request'
-        uses: reviewdog/action-suggester@ac5ce6d94e35c00530447dc63c271e38e4fd36c6 # v1.26.3
+        uses: reviewdog/action-suggester@295fd4e5482381f33925c46ca5c2f66c69370267 # v1.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tool_name: shfmt
@@ -674,7 +674,7 @@ jobs:
 
       - name: Suggest Zsh formatting
         if: github.event_name == 'pull_request'
-        uses: reviewdog/action-suggester@ac5ce6d94e35c00530447dc63c271e38e4fd36c6 # v1.26.3
+        uses: reviewdog/action-suggester@295fd4e5482381f33925c46ca5c2f66c69370267 # v1.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tool_name: shfmt-zsh
