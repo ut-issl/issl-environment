@@ -28,18 +28,18 @@ jobs:
     permissions:
       contents: read
     outputs:
-      github-actions: ${{ steps.changed-files.outputs.github_actions_any_changed }}
-      github-actions-ci: ${{ steps.changed-files.outputs.github_actions_ci_any_changed }}
-      pre-commit-config: ${{ steps.changed-files.outputs.pre_commit_config_any_changed }}
-      renovate-config: ${{ steps.changed-files.outputs.renovate_config_any_changed }}
-      json5: ${{ steps.changed-files.outputs.json5_any_changed }}
-      toml: ${{ steps.changed-files.outputs.toml_any_changed }}
-      yaml: ${{ steps.changed-files.outputs.yaml_any_changed }}
-      markdown: ${{ steps.changed-files.outputs.markdown_any_changed }}
-      nix: ${{ steps.changed-files.outputs.nix_any_changed }}
-      python: ${{ steps.changed-files.outputs.python_any_changed }}
-      shell: ${{ steps.changed-files.outputs.shell_any_changed }}
-      zsh: ${{ steps.changed-files.outputs.zsh_any_changed }}
+      github-actions: ${{ steps.changed-files.outputs.github_actions_any_modified }}
+      github-actions-ci: ${{ steps.changed-files.outputs.github_actions_ci_any_modified }}
+      pre-commit-config: ${{ steps.changed-files.outputs.pre_commit_config_any_modified }}
+      renovate-config: ${{ steps.changed-files.outputs.renovate_config_any_modified }}
+      json5: ${{ steps.changed-files.outputs.json5_any_modified }}
+      toml: ${{ steps.changed-files.outputs.toml_any_modified }}
+      yaml: ${{ steps.changed-files.outputs.yaml_any_modified }}
+      markdown: ${{ steps.changed-files.outputs.markdown_any_modified }}
+      nix: ${{ steps.changed-files.outputs.nix_any_modified }}
+      python: ${{ steps.changed-files.outputs.python_any_modified }}
+      shell: ${{ steps.changed-files.outputs.shell_any_modified }}
+      zsh: ${{ steps.changed-files.outputs.zsh_any_modified }}
 
     steps:
       - name: Check out the repository
@@ -52,6 +52,7 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
         with:
+          output_renamed_files_as_deleted_and_added: true
           files_yaml: |
             github_actions:
               - '.github/workflows/**'
