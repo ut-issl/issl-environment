@@ -17,15 +17,33 @@ test_prek_installation() {
   prek --version
 }
 
+test_rumdl_installation() {
+  assert_command_path "${nix_profile_bin}/rumdl"
+  rumdl --version
+}
+
+test_tombi_installation() {
+  assert_command_path "${nix_profile_bin}/tombi"
+  tombi --version
+}
+
 test_typos_installation() {
   assert_command_path "${nix_profile_bin}/typos"
   typos --version
 }
 
+test_yamllint_installation() {
+  assert_command_path "${nix_profile_bin}/yamllint"
+  yamllint --version
+}
+
 main() {
   run_test test_commitizen_installation
   run_test test_prek_installation
+  run_test test_rumdl_installation
+  run_test test_tombi_installation
   run_test test_typos_installation
+  run_test test_yamllint_installation
 }
 
 main "$@"

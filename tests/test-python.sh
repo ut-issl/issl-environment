@@ -43,6 +43,11 @@ test_uv_installation() {
   uv --version
 }
 
+test_ruff_installation() {
+  assert_command_path "${nix_profile_bin}/ruff"
+  ruff --version
+}
+
 test_shared_pythonrc_file() {
   cmp "${common_dir}/home-modules/python/pythonrc.py" "${issl_pythonrc_path}"
 }
@@ -124,6 +129,7 @@ test_python_startup_basic_repl_libedit_history() {
 
 main() {
   run_test test_uv_installation
+  run_test test_ruff_installation
   run_test test_shared_pythonrc_file
   run_test test_user_python_startup_file
   run_test test_python_startup_is_loaded
