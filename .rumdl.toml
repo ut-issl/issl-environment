@@ -1,5 +1,5 @@
 [global]
-extend-enable = ["MD060", "MD070", "MD080", "MD084"]
+extend-enable = ["MD060", "MD070", "MD080", "MD083", "MD084", "MD087", "MD091", "MD095"]
 
 [MD013]
 code-blocks = false
