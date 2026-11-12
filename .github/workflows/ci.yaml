@@ -260,7 +260,7 @@ jobs:
           version: '1.11.1'
 
       - name: Format TOML
-        run: tombi format
+        run: tombi format --error-on-warnings
 
       - name: Suggest TOML formatting
         if: github.event_name == 'pull_request'
