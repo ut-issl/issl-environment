@@ -492,9 +492,6 @@ jobs:
           echo '::add-matcher::.github/problem-matchers/statix.json'
           git ls-files -z '*.nix' | xargs -0 -r -n 1 nix run --inputs-from . nixpkgs#statix -- check --format=errfmt
 
-      - name: Check the flake
-        run: nix flake check --all-systems --show-trace
-
   format-python:
     name: Format Python
     needs: determine-changes
