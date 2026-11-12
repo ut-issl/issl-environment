@@ -94,16 +94,21 @@ jobs:
         run: |
           tmpdir="$(mktemp -d)"
           home_dir="${tmpdir}/home"
+          runtime_dir="${tmpdir}/runtime"
 
           # Seed the test HOME with the default Ubuntu skeleton dotfiles (~/.bashrc, ~/.profile, ~/.bash_logout).
           mkdir -p "${home_dir}"
           cp -a /etc/skel/. "${home_dir}/"
+
+          # Create an empty runtime directory for the test session.
+          mkdir -m 0700 "${runtime_dir}"
 
           {
             echo "home-dir=${home_dir}"
             echo "config-dir=${home_dir}/.config"
             echo "data-dir=${home_dir}/.local/share"
             echo "state-dir=${home_dir}/.local/state"
+            echo "runtime-dir=${runtime_dir}"
           } >> "${GITHUB_OUTPUT}"
 
       - name: Apply Home Manager configuration
@@ -112,6 +117,7 @@ jobs:
           CONFIG_DIR: ${{ steps.test-environment.outputs.config-dir }}
           DATA_DIR: ${{ steps.test-environment.outputs.data-dir }}
           STATE_DIR: ${{ steps.test-environment.outputs.state-dir }}
+          RUNTIME_DIR: ${{ steps.test-environment.outputs.runtime-dir }}
           FLAKE_TARGET: ${{ inputs.flake-target }}
           OVERRIDE_ISSL_INPUT: ${{ inputs.override-issl-input }}
         run: |
@@ -131,11 +137,13 @@ jobs:
           fi
 
           env \
+            -u DBUS_SESSION_BUS_ADDRESS \
             HOME="${HOME_DIR}" \
             USER='issl-test' \
             XDG_CONFIG_HOME="${CONFIG_DIR}" \
             XDG_DATA_HOME="${DATA_DIR}" \
             XDG_STATE_HOME="${STATE_DIR}" \
+            XDG_RUNTIME_DIR="${RUNTIME_DIR}" \
             nix run '.#home-manager' -- \
             switch --flake ".#${FLAKE_TARGET}" "${switch_args[@]}"
 

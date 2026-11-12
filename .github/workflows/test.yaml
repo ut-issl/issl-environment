@@ -122,16 +122,21 @@ jobs:
         run: |
           tmpdir="$(mktemp -d)"
           home_dir="${tmpdir}/home"
+          runtime_dir="${tmpdir}/runtime"
 
           # Seed the test HOME with the default Ubuntu skeleton dotfiles (~/.bashrc, ~/.profile, ~/.bash_logout).
           mkdir -p "${home_dir}"
           cp -a /etc/skel/. "${home_dir}/"
+
+          # Create an empty runtime directory for the test session.
+          mkdir -m 0700 "${runtime_dir}"
 
           {
             echo "home-dir=${home_dir}"
             echo "config-dir=${home_dir}/.config"
             echo "data-dir=${home_dir}/.local/share"
             echo "state-dir=${home_dir}/.local/state"
+            echo "runtime-dir=${runtime_dir}"
           } >> "${GITHUB_OUTPUT}"
 
       - name: Apply Home Manager configuration (apply.sh)
@@ -141,14 +146,17 @@ jobs:
           CONFIG_DIR: ${{ steps.test-environment.outputs.config-dir }}
           DATA_DIR: ${{ steps.test-environment.outputs.data-dir }}
           STATE_DIR: ${{ steps.test-environment.outputs.state-dir }}
+          RUNTIME_DIR: ${{ steps.test-environment.outputs.runtime-dir }}
           ENABLE_ZSH: ${{ matrix.enable-zsh }}
         run: |
           env \
+            -u DBUS_SESSION_BUS_ADDRESS \
             HOME="${HOME_DIR}" \
             USER='issl-test' \
             XDG_CONFIG_HOME="${CONFIG_DIR}" \
             XDG_DATA_HOME="${DATA_DIR}" \
             XDG_STATE_HOME="${STATE_DIR}" \
+            XDG_RUNTIME_DIR="${RUNTIME_DIR}" \
             ISSL_ENABLE_ZSH="${ENABLE_ZSH}" \
             GIT_USER_NAME='ISSL Test User' \
             GIT_USER_EMAIL='issl-test@example.com' \
@@ -161,17 +169,20 @@ jobs:
           CONFIG_DIR: ${{ steps.test-environment.outputs.config-dir }}
           DATA_DIR: ${{ steps.test-environment.outputs.data-dir }}
           STATE_DIR: ${{ steps.test-environment.outputs.state-dir }}
+          RUNTIME_DIR: ${{ steps.test-environment.outputs.runtime-dir }}
           ENABLE_ZSH: ${{ matrix.enable-zsh }}
           NIX_CONFIG: access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
         run: |
           git -C common branch ci-setup-entry HEAD
 
           env \
+            -u DBUS_SESSION_BUS_ADDRESS \
             HOME="${HOME_DIR}" \
             USER='issl-test' \
             XDG_CONFIG_HOME="${CONFIG_DIR}" \
             XDG_DATA_HOME="${DATA_DIR}" \
             XDG_STATE_HOME="${STATE_DIR}" \
+            XDG_RUNTIME_DIR="${RUNTIME_DIR}" \
             REPO_URL="file://${GITHUB_WORKSPACE}/common" \
             REPO_REF='ci-setup-entry' \
             ISSL_INSTALL_DOCKER='no' \
