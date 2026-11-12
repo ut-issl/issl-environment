@@ -48,6 +48,11 @@ These options are yours to set:
 - `targets.genericLinux.gpu.enable` (default: `false`) turns on the GPU driver integration
   that Nix-built applications rendering through OpenGL need, and asks for a one-time privileged setup on each machine.
   See [package management practices](13-package-management-practices.md#gui-applications).
+- `nix.gc.automatic` (default: `true`) runs the Nix garbage collector once a week through a systemd user timer,
+  with the options in `nix.gc.options` (default: `--delete-older-than 30d`).
+  It does not run on a host without a systemd user session.
+  Each run deletes the generations of your profiles that are older than 30 days, except the most recent of them,
+  so you can still roll back to any state from the last 30 days.
 
 The shared module also decides the following for every configuration that imports it:
 
