@@ -232,7 +232,7 @@ jobs:
       common-repository: ${{ github.repository }}
       common-ref: ${{ github.sha }}
       user-repository: ut-issl/personal-nix-config-template
-      user-ref: 'e6f359d73848f07c69a4f0e2fa00345513f07d30' # main
+      user-ref: '90536e236d8734c6c09f3bda095e4a6f43721eef' # main
       override-issl-input: true
 
   check-test-results:
