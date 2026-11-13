@@ -35,4 +35,4 @@ jobs:
           output: lychee/out.json
 
       - name: Sync the issues with the report
-        uses: conjikidow/lychee-issue-action@af585844316a19f9320629a9d74031dbff65d54a # v0.4.0
+        uses: conjikidow/lychee-issue-action@df64298c6362cd8bb8848210287b0ec04b65cfae # v0.5.0
