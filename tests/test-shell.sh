@@ -63,6 +63,7 @@ test_bash_startup_is_loaded() {
       [ "${ISSL_ENV_SH_LOADED:-0}" = "1" ] || { echo "login shell did not load the shared env.sh" >&2; ok=0; }
       [ "${ISSL_BASHRC_LOADED:-0}" = "1" ] || { echo "interactive shell did not load the shared bashrc" >&2; ok=0; }
       [ "$(command -v colordiff)" = "${HOME}/.nix-profile/bin/colordiff" ] || { echo "env.sh did not add the Nix profile bin to PATH" >&2; ok=0; }
+      [ "$(command -v nix)" = "${HOME}/.nix-profile/bin/nix" ] || { echo "env.sh did not put the Nix profile bin before the default profile" >&2; ok=0; }
       [ "${ok}" = "1" ]
     '
 }
