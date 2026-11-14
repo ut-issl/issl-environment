@@ -180,6 +180,50 @@ SCRIPT
   assert_equal "${unreadable}" ""
 }
 
+test_nix_memory_limit_wrapper_with_real_user_session() {
+  local runtime_dir
+  local probe_error
+  local systemd_version
+  local limited
+  local slice_info
+
+  runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+  if [[ ! -d ${runtime_dir} ]]; then
+    echo "Skipping: no systemd user session (${runtime_dir} is missing)"
+    return 0
+  fi
+  if [[ ! -S "${runtime_dir}/bus" ]]; then
+    echo "Skipping: no systemd user session (${runtime_dir}/bus is missing)"
+    return 0
+  fi
+  if ! XDG_RUNTIME_DIR="${runtime_dir}" systemctl --user show-environment > /dev/null 2>&1; then
+    echo "Skipping: no systemd user session (systemctl --user is unreachable through ${runtime_dir})"
+    return 0
+  fi
+  if ! probe_error="$(XDG_RUNTIME_DIR="${runtime_dir}" systemd-run --user --scope --quiet --collect -- true 2>&1 > /dev/null)"; then
+    echo "Skipping: the systemd user session cannot start a scope for this process (${probe_error})"
+    return 0
+  fi
+
+  systemd_version="$(systemd-run --version)"
+  echo "${systemd_version%%$'\n'*}"
+  limited="$(
+    env \
+      -u ISSL_NIX_MEMORY_LIMITED \
+      HOME="${home_dir}" \
+      XDG_CONFIG_HOME="${config_dir}" \
+      XDG_RUNTIME_DIR="${runtime_dir}" \
+      "${nix_profile_bin}/nix" eval --impure --raw --expr 'builtins.getEnv "ISSL_NIX_MEMORY_LIMITED"'
+  )"
+  slice_info="$(
+    XDG_RUNTIME_DIR="${runtime_dir}" systemctl --user show --property=ControlGroup --property=MemoryMax issl-nix.slice
+  )"
+  echo "${slice_info}"
+
+  assert_equal "${limited}" 1
+  [[ ${slice_info} =~ (^|$'\n')MemoryMax=[0-9]+($'\n'|$) ]]
+}
+
 main() {
   run_test test_nix_installation
   run_test test_shared_nix_config
@@ -192,6 +236,7 @@ main() {
   run_test test_nix_search_cli_installation
   run_test test_nix_memory_limit_wrapper_without_user_session
   run_test test_nix_memory_limit_wrapper_with_user_session
+  run_test test_nix_memory_limit_wrapper_with_real_user_session
 }
 
 main "$@"
