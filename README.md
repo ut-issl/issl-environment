@@ -27,6 +27,7 @@ This repository can be used in two ways:
 
 1. Create and maintain a personal Nix configuration repository with Home Manager
    that is designed to import this ISSL config from the start.
+   - Start from the template repository [`ut-issl/personal-nix-config-template`](https://github.com/ut-issl/personal-nix-config-template).
    - See [setup with a personal config repository](docs/11-setup-with-a-personal-config-repository.md).
 
 2. Use the setup script provided by this repository.
