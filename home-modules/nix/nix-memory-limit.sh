@@ -140,12 +140,20 @@ if [[ $tasks -gt 0 ]]; then
   release_lock
 fi
 
+run_options=(--user --scope --quiet --collect --slice="$slice")
+systemd_version="$(systemd-run --version 2> /dev/null || true)"
+systemd_version="${systemd_version#systemd }"
+systemd_version="${systemd_version%%[!0-9]*}"
+if [[ -n $systemd_version ]] && ((systemd_version >= 254)); then
+  run_options+=(--expand-environment=no)
+fi
+
 start_limited() {
   if [[ -n $lock_fd ]]; then
     exec {lock_fd}>&-
   fi
   exec "$env" --default-signal=INT,QUIT ISSL_NIX_MEMORY_LIMITED=1 \
-    systemd-run --user --scope --quiet --collect --slice="$slice" -- "$real" "$@"
+    systemd-run "${run_options[@]}" -- "$real" "$@"
 }
 start_limited "$@" <&0 &
 child=$!

@@ -77,6 +77,7 @@ test_nix_memory_limit_wrapper_with_user_session() {
   local busy_call
   local idle_call
   local unreadable
+  local old_systemd_calls
 
   fake_dir="$(mktemp -d)"
   cat > "${fake_dir}/systemctl" << 'SCRIPT'
@@ -93,6 +94,10 @@ fi
 SCRIPT
   cat > "${fake_dir}/systemd-run" << 'SCRIPT'
 #!/usr/bin/env bash
+if [[ $1 == --version ]]; then
+  echo "systemd ${FAKE_SYSTEMD_VERSION:-255} (fake)"
+  exit 0
+fi
 printf 'systemd-run %s\n' "$*" >> "${FAKE_CALLS}"
 while [[ $# -gt 0 && $1 != -- ]]; do
   shift
@@ -151,6 +156,15 @@ SCRIPT
       PATH="${fake_dir}:${PATH}" \
       "${nix_profile_bin}/nix" eval --impure --raw --expr 'builtins.getEnv "ISSL_NIX_MEMORY_LIMITED"'
   )"
+  env \
+    HOME="${home_dir}" \
+    XDG_CONFIG_HOME="${config_dir}" \
+    XDG_RUNTIME_DIR="${fake_dir}" \
+    FAKE_CALLS="${fake_dir}/old-systemd-calls" \
+    FAKE_SYSTEMD_VERSION=249 \
+    PATH="${fake_dir}:${PATH}" \
+    "${nix_profile_bin}/nix" eval --expr 1 > /dev/null
+  old_systemd_calls="$(< "${fake_dir}/old-systemd-calls")"
   calls="$(< "${fake_dir}/calls")"
   busy_call="$(grep 'set-property' "${fake_dir}/busy-calls")"
   idle_call="$(grep 'set-property' "${fake_dir}/idle-calls")"
@@ -159,7 +173,8 @@ SCRIPT
   assert_equal "${limited}" 1
   assert_equal "${limited_after_option}" 1
   grep -Eq '^systemctl --user set-property --runtime issl-nix\.slice MemoryMax=[0-9]+K MemorySwapMax=0$' <<< "${calls}"
-  grep -Eq '^systemd-run --user --scope --quiet --collect --slice=issl-nix\.slice -- ' <<< "${calls}"
+  grep -Eq '^systemd-run --user --scope --quiet --collect --slice=issl-nix\.slice --expand-environment=no -- ' <<< "${calls}"
+  grep -Eq '^systemd-run --user --scope --quiet --collect --slice=issl-nix\.slice -- ' <<< "${old_systemd_calls}"
   assert_equal "${busy_call}" 'systemctl --user set-property --runtime issl-nix.slice MemoryMax=1181116006K MemorySwapMax=0'
   [[ ${idle_call} != *MemoryMax=1181116006K* ]]
   assert_equal "${unreadable}" ""
