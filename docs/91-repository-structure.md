@@ -36,7 +36,8 @@ Each module is a directory holding its Nix expression together with the configur
   - `shell/shell.nix` holds what Bash and Zsh share.
     `bash/bash.nix` and `zsh/zsh.nix` hold what belongs to one shell only.
   - `zsh/zsh.nix` deploys the shared Zsh configuration unless the `issl.zsh.enable` option is set to `false`.
-- Every other file in the directory is a configuration file that the module deploys, such as `git/gitconfig` or `python/pythonrc.py`.
+- Every other file in the directory is a configuration file that the module deploys, such as `git/gitconfig` or `python/pythonrc.py`,
+  or a script that the module builds into a command, such as `nix/nix-memory-limit.sh`.
 - `default.nix` is the aggregation point, and the only `default.nix` in this directory tree.
   It imports every module directory automatically.
 

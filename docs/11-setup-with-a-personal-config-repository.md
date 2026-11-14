@@ -48,6 +48,19 @@ These options are yours to set:
 - `targets.genericLinux.gpu.enable` (default: `false`) turns on the GPU driver integration
   that Nix-built applications rendering through OpenGL need, and asks for a one-time privileged setup on each machine.
   See [package management practices](13-package-management-practices.md#gui-applications).
+- `issl.nix.memoryLimit.enable` (default: `true`) runs each `nix` command under a memory limit,
+  so that an evaluation that outgrows the available memory, such as `nix search` over all of Nixpkgs,
+  stops with an error instead of exhausting the memory of the whole desktop session.
+  The limit is `issl.nix.memoryLimit.percent` (default: `75`) percent of the memory available to `nix` commands,
+  recomputed whenever one starts,
+  and the limited commands running at the same time share it.
+  It is not set below what the commands already running use plus a margin,
+  of a tenth of that or 256 MiB, whichever is larger, so they stop only if they grow past it.
+  It runs the Nix that `nix.package` names when that is set, and otherwise the one the host installed.
+  It applies only where a systemd user session is available,
+  and not to `nix develop`, `nix shell`, `nix env shell` and `nix run`,
+  whose limit would carry over to the shell or program they start,
+  nor to the legacy `nix-*` commands such as `nix-build`.
 - `nix.gc.automatic` (default: `true`) runs the Nix garbage collector once a week through a systemd user timer,
   with the options in `nix.gc.options` (default: `--delete-older-than 30d`).
   It does not run on a host without a systemd user session.
