@@ -51,6 +51,135 @@ test_deadnix_installation() {
   deadnix --version
 }
 
+test_nix_search_cli_installation() {
+  assert_command_path "${nix_profile_bin}/nix-search"
+  nix-search --help > /dev/null
+}
+
+test_nix_memory_limit_wrapper_without_user_session() {
+  local limited
+
+  assert_file "${nix_profile_bin}/nix"
+  limited="$(
+    env -u XDG_RUNTIME_DIR \
+      HOME="${home_dir}" \
+      XDG_CONFIG_HOME="${config_dir}" \
+      "${nix_profile_bin}/nix" eval --impure --raw --expr 'builtins.getEnv "ISSL_NIX_MEMORY_LIMITED"'
+  )"
+  assert_equal "${limited}" ""
+}
+
+test_nix_memory_limit_wrapper_with_user_session() {
+  local fake_dir
+  local calls
+  local limited
+  local limited_after_option
+  local busy_call
+  local idle_call
+  local unreadable
+  local old_systemd_calls
+
+  fake_dir="$(mktemp -d)"
+  cat > "${fake_dir}/systemctl" << 'SCRIPT'
+#!/usr/bin/env bash
+printf 'systemctl %s\n' "$*" >> "${FAKE_CALLS}"
+if [[ -n ${FAKE_SHOW_FAILS:-} && $2 == show ]]; then
+  exit 1
+elif [[ $1 == --user && $2 == show && $* == *--value* ]]; then
+  echo 1
+elif [[ $1 == --user && $2 == show ]]; then
+  printf 'TasksCurrent=%s\nMemoryCurrent=%s\n' \
+    "${FAKE_TASKS_CURRENT:-[not set]}" "${FAKE_MEMORY_CURRENT:-[not set]}"
+fi
+SCRIPT
+  cat > "${fake_dir}/systemd-run" << 'SCRIPT'
+#!/usr/bin/env bash
+if [[ $1 == --version ]]; then
+  echo "systemd ${FAKE_SYSTEMD_VERSION:-255} (fake)"
+  exit 0
+fi
+printf 'systemd-run %s\n' "$*" >> "${FAKE_CALLS}"
+while [[ $# -gt 0 && $1 != -- ]]; do
+  shift
+done
+shift
+exec "$@"
+SCRIPT
+  chmod +x "${fake_dir}/systemctl" "${fake_dir}/systemd-run"
+  uv run --no-project --python=3 python -c 'import socket, sys; socket.socket(socket.AF_UNIX).bind(sys.argv[1])' \
+    "${fake_dir}/bus"
+
+  limited="$(
+    env \
+      HOME="${home_dir}" \
+      XDG_CONFIG_HOME="${config_dir}" \
+      XDG_RUNTIME_DIR="${fake_dir}" \
+      FAKE_CALLS="${fake_dir}/calls" \
+      PATH="${fake_dir}:${PATH}" \
+      "${nix_profile_bin}/nix" eval --impure --raw --expr 'builtins.getEnv "ISSL_NIX_MEMORY_LIMITED"'
+  )"
+  limited_after_option="$(
+    env \
+      HOME="${home_dir}" \
+      XDG_CONFIG_HOME="${config_dir}" \
+      XDG_RUNTIME_DIR="${fake_dir}" \
+      FAKE_CALLS="${fake_dir}/calls" \
+      PATH="${fake_dir}:${PATH}" \
+      "${nix_profile_bin}/nix" --option flake-registry run eval --impure --raw \
+      --expr 'builtins.getEnv "ISSL_NIX_MEMORY_LIMITED"'
+  )"
+  env \
+    HOME="${home_dir}" \
+    XDG_CONFIG_HOME="${config_dir}" \
+    XDG_RUNTIME_DIR="${fake_dir}" \
+    FAKE_CALLS="${fake_dir}/busy-calls" \
+    FAKE_TASKS_CURRENT=1 \
+    FAKE_MEMORY_CURRENT=1099511627776 \
+    PATH="${fake_dir}:${PATH}" \
+    "${nix_profile_bin}/nix" eval --expr 1 > /dev/null
+  env \
+    HOME="${home_dir}" \
+    XDG_CONFIG_HOME="${config_dir}" \
+    XDG_RUNTIME_DIR="${fake_dir}" \
+    FAKE_CALLS="${fake_dir}/idle-calls" \
+    FAKE_TASKS_CURRENT=0 \
+    FAKE_MEMORY_CURRENT=1099511627776 \
+    PATH="${fake_dir}:${PATH}" \
+    "${nix_profile_bin}/nix" eval --expr 1 > /dev/null
+  unreadable="$(
+    env \
+      HOME="${home_dir}" \
+      XDG_CONFIG_HOME="${config_dir}" \
+      XDG_RUNTIME_DIR="${fake_dir}" \
+      FAKE_CALLS="${fake_dir}/unreadable-calls" \
+      FAKE_SHOW_FAILS=1 \
+      PATH="${fake_dir}:${PATH}" \
+      "${nix_profile_bin}/nix" eval --impure --raw --expr 'builtins.getEnv "ISSL_NIX_MEMORY_LIMITED"'
+  )"
+  env \
+    HOME="${home_dir}" \
+    XDG_CONFIG_HOME="${config_dir}" \
+    XDG_RUNTIME_DIR="${fake_dir}" \
+    FAKE_CALLS="${fake_dir}/old-systemd-calls" \
+    FAKE_SYSTEMD_VERSION=249 \
+    PATH="${fake_dir}:${PATH}" \
+    "${nix_profile_bin}/nix" eval --expr 1 > /dev/null
+  old_systemd_calls="$(< "${fake_dir}/old-systemd-calls")"
+  calls="$(< "${fake_dir}/calls")"
+  busy_call="$(grep 'set-property' "${fake_dir}/busy-calls")"
+  idle_call="$(grep 'set-property' "${fake_dir}/idle-calls")"
+  rm -rf "${fake_dir}"
+
+  assert_equal "${limited}" 1
+  assert_equal "${limited_after_option}" 1
+  grep -Eq '^systemctl --user set-property --runtime issl-nix\.slice MemoryMax=[0-9]+K MemorySwapMax=0$' <<< "${calls}"
+  grep -Eq '^systemd-run --user --scope --quiet --collect --slice=issl-nix\.slice --expand-environment=no -- ' <<< "${calls}"
+  grep -Eq '^systemd-run --user --scope --quiet --collect --slice=issl-nix\.slice -- ' <<< "${old_systemd_calls}"
+  assert_equal "${busy_call}" 'systemctl --user set-property --runtime issl-nix.slice MemoryMax=1181116006K MemorySwapMax=0'
+  [[ ${idle_call} != *MemoryMax=1181116006K* ]]
+  assert_equal "${unreadable}" ""
+}
+
 main() {
   run_test test_nix_installation
   run_test test_shared_nix_config
@@ -60,6 +189,9 @@ main() {
   run_test test_nixfmt_installation
   run_test test_statix_installation
   run_test test_deadnix_installation
+  run_test test_nix_search_cli_installation
+  run_test test_nix_memory_limit_wrapper_without_user_session
+  run_test test_nix_memory_limit_wrapper_with_user_session
 }
 
 main "$@"
