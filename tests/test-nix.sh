@@ -51,6 +51,11 @@ test_deadnix_installation() {
   deadnix --version
 }
 
+test_nix_search_cli_installation() {
+  assert_command_path "${nix_profile_bin}/nix-search"
+  nix-search --help > /dev/null
+}
+
 main() {
   run_test test_nix_installation
   run_test test_shared_nix_config
@@ -60,6 +65,7 @@ main() {
   run_test test_nixfmt_installation
   run_test test_statix_installation
   run_test test_deadnix_installation
+  run_test test_nix_search_cli_installation
 }
 
 main "$@"

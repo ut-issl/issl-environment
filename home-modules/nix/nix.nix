@@ -10,6 +10,7 @@
 
   home.packages = [
     pkgs.deadnix
+    pkgs.nix-search-cli
     pkgs.nixfmt
     pkgs.statix
   ];
