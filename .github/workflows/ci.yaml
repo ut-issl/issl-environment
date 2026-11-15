@@ -348,12 +348,20 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 2
+
+      - name: Cache the link check results
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .lycheecache
+          key: lychee-${{ github.sha }}
+          restore-keys: lychee-
 
       - name: Check links
         id: links
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
-          args: --no-progress .
+          args: --no-progress --cache .
           fail: false
           format: json
           lycheeVersion: 'v0.24.2'
@@ -371,20 +379,42 @@ jobs:
             echo '::error title=lychee::lychee wrote no report. See the Check links step.'
             exit 1
           fi
-          jq --raw-output --arg prefix "file://${GITHUB_WORKSPACE}/" '
-              def escape: gsub("%"; "%25") | gsub("\r"; "%0D") | gsub("\n"; "%0A");
-              (.error_map, .timeout_map)
-              | to_entries[]
-              | (.key | ltrimstr("./")) as $file
-              | .value[]
-              | "::error file=\($file),line=\(.span.line),col=\(.span.column),"
-                + "title=lychee::\("\(.url | ltrimstr($prefix)): \(.status.text)" | escape)"
-            ' lychee/out.json
           if ! jq --exit-status '.total > 0' lychee/out.json > /dev/null; then
             echo '::error title=lychee::No links were found. This usually indicates a configuration error.'
             exit 1
           fi
-          exit "${LYCHEE_EXIT_CODE}"
+          if [[ ${GITHUB_EVENT_NAME} == 'pull_request' ]]; then
+            git -c core.quotePath=false diff --unified=0 --no-color --no-ext-diff --dst-prefix=b/ HEAD^1 HEAD \
+              | awk '
+                  /^diff --git / { file = ""; header = 1; next }
+                  header && /^\+\+\+ b\// { file = substr($0, 7); sub(/\t$/, "", file); next }
+                  /^@@ / { header = 0 }
+                  /^@@ / && file != "" {
+                    split(substr($3, 2), range, ",")
+                    count = (range[2] == "" ? 1 : range[2] + 0)
+                    for (i = 0; i < count; i++) print file ":" (range[1] + i)
+                  }
+                ' > lychee/changed-lines.txt
+          else
+            : > lychee/changed-lines.txt
+          fi
+          jq --raw-output --rawfile changed lychee/changed-lines.txt --arg prefix "file://${GITHUB_WORKSPACE}/" '
+              def escape: gsub("%"; "%25") | gsub("\r"; "%0D") | gsub("\n"; "%0A");
+              def escape_property: escape | gsub(":"; "%3A") | gsub(","; "%2C");
+              ($changed | split("\n") | map(select(length > 0) | {key: ., value: true}) | from_entries) as $lines
+              | (.error_map, .timeout_map)
+              | to_entries[]
+              | (.key | ltrimstr("./")) as $file
+              | .value[]
+              | (if $lines["\($file):\(.span.line)"] or (.url | test("^(file://|error:)"))
+                 then "error" else "warning" end) as $level
+              | "::\($level) file=\($file | escape_property),line=\(.span.line),col=\(.span.column),"
+                + "title=lychee::\("\(.url | ltrimstr($prefix)): \(.status.text)" | escape)"
+            ' lychee/out.json > lychee/annotations.txt
+          cat lychee/annotations.txt
+          if grep --quiet '^::error ' lychee/annotations.txt; then
+            exit 1
+          fi
 
   lint-markdown:
     name: Lint Markdown
