@@ -60,10 +60,18 @@ For a new tool:
   Point the user to `docs/13-package-management-practices.md` rather than to a particular alternative:
   whether such an application can live in a personal config repository
   or has to stay with the distribution depends on the host integration it needs.
-- Look the package up in Nixpkgs at the pinned revision:
-  read the `nixpkgs` entry's `locked.rev` from `flake.lock` and run `nix search github:NixOS/nixpkgs/<rev> <name>`.
-  Read the `nixpkgs-unstable` entry instead for a package
-  that § "Changing a Module's Packages or Settings" lets come from it.
+- Find the package with `nix-search`, which the shared configuration installs.
+  It queries <https://search.nixos.org/packages> without evaluating Nixpkgs locally.
+  Search by words, `--name` or `--program`, on the channel of the pinned release.
+  That channel follows from the `original.ref` of the `nixpkgs` entry in `flake.lock`:
+  for example, `nixos-26.05` is `--channel 26.05`.
+  For a package that § "Changing a Module's Packages or Settings" lets come from `nixpkgs-unstable`,
+  search `--channel unstable` instead.
+  Without `nix-search`, use <https://search.nixos.org/packages> itself.
+  Never run `nix search`, which evaluates the whole package set and needs several GiB of memory.
+- Confirm the version at the pinned revision, since the search covers a channel that may have moved past the pin:
+  read the `nixpkgs` entry's `locked.rev` from `flake.lock` and run `nix eval github:NixOS/nixpkgs/<rev>#<name>.version`.
+  Read the `nixpkgs-unstable` entry instead for a package that comes from it.
 - Work out whether the package is meaningful on every system that `flake.nix` declares,
   and guard it on the platform if it is not, as § "Changing a Module's Packages or Settings" describes.
 - An unfree package needs an explicit yes from the user before you add it,
