@@ -25,7 +25,7 @@ Never write secrets (tokens, private keys, credentials) into the repository;
 what this repository deploys reaches every lab machine.
 Never run `scripts/apply.sh`, `scripts/setup.sh`, or `home-manager switch`
 against the user's real home environment without explicit approval;
-use prek and `nix flake check --all-systems` for local validation instead.
+use prek and the Nix validation of step 7 for local validation instead.
 
 Before starting, verify that `nix` is available (`command -v nix`).
 Nix is required for developing this repository;
@@ -150,10 +150,30 @@ Run validation in this order:
 
 1. Run `prek run --files <changed files> --skip no-commit-to-branch` and fix what it reports.
    If `prek` is not on PATH, use `uvx prek` instead.
-2. Run the Nix validation of § "Validating Changes": stage the new files, run the flake checks,
-   then build the activation packages and inspect the installed binaries and deployed files.
-   Build for the system of this machine, not the one in the example command.
-   Remove the `result-*` symlinks when done.
+2. Run the Nix validation of § "Validating Changes", but run the checks one at a time.
+   Do not run `nix flake check` for this: it evaluates every check in one process, which takes well over a GiB.
+   - Stage the new files as that section describes.
+   - Build the checks for the system of this machine:
+     `x86_64-linux` or `aarch64-linux`, matching the `x86_64` or `aarch64` that `uname -m` prints.
+     List them, then build each listed name in turn:
+
+     ```sh
+     nix eval --json .#checks.<system> --apply builtins.attrNames
+     nix build --no-link --show-trace .#checks.<system>.<name>
+     ```
+
+   - In place of `--all-systems`, evaluate the same checks for the other system without building them:
+
+     ```sh
+     nix eval --raw --show-trace .#checks.<other system>.<name>.drvPath
+     ```
+
+   - If the change edits the `packages` or `formatter` outputs of `flake.nix`,
+     also evaluate `.#formatter.<system>.drvPath` and `.#packages.<system>.<name>.drvPath` for each package
+     with `nix eval --raw --show-trace`, for both systems, which `nix flake check` would otherwise have covered.
+   - Then build the activation packages and inspect the installed binaries and deployed files.
+     Build for the system of this machine, not the one in the example command.
+     Remove the `result-*` symlinks when done.
 
 ## 8. Wrap up
 
