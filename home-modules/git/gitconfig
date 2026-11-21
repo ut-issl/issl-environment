@@ -7,12 +7,14 @@
     sgls = sgl --stat
     su = submodule update --init --recursive
     unstage = restore --staged
+    pushf = push --force-with-lease
     which = "!_() { git config --get alias.$1; }; _"
 
 [core]
     autocrlf = input
     editor = vim
     eol = lf
+    quotePath = false
     safecrlf = true
 
 [init]
@@ -20,10 +22,13 @@
 
 [status]
     showStash = true
+    submoduleSummary = true
 
 [diff]
+    algorithm = histogram
     colorMoved = default
     colorMovedWS = allow-indentation-change
+    submodule = log
 
 [merge]
     conflictStyle = zdiff3
@@ -43,6 +48,7 @@
 [push]
     default = simple
     autoSetupRemote = true
+    useForceIfIncludes = true
     recurseSubmodules = check
 
 [tag]
