@@ -69,7 +69,7 @@ jobs:
       - name: Install Commitizen
         uses: commitizen-tools/setup-cz@96c75e6ae9632047f2c9b4025b9dd1624b40de8f # v0.9.1
         with:
-          version: '4.19.3'
+          version: '4.19.4'
           python-version: '3.x'
 
       - name: Lint pull request title
