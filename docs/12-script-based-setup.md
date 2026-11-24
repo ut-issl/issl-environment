@@ -38,10 +38,10 @@ bash <(wget -qO- https://github.com/ut-issl/issl-environment/releases/latest/dow
 
 The other commands in this guide work the same way with `curl -fsSL` replaced by `wget -qO-`.
 
-To pin setup to a fixed release, replace `latest` with a tag such as `v0.15.0`:
+To pin setup to a fixed release, replace `latest` with a tag such as `v0.15.1`:
 
 ```bash
-bash <(curl -fsSL https://github.com/ut-issl/issl-environment/releases/download/v0.15.0/setup.sh)
+bash <(curl -fsSL https://github.com/ut-issl/issl-environment/releases/download/v0.15.1/setup.sh)
 ```
 
 Each release's `setup.sh` defaults to installing that same release,
