@@ -7,6 +7,11 @@ nix_profile_bin="${home_dir}/.nix-profile/bin"
 
 source "${common_dir}/tests/lib.sh"
 
+test_curl_installation() {
+  assert_command_path "${nix_profile_bin}/curl"
+  curl --version
+}
+
 test_fd_installation() {
   assert_command_path "${nix_profile_bin}/fd"
   fd --version
@@ -37,13 +42,20 @@ test_tree_installation() {
   tree --version
 }
 
+test_wget_installation() {
+  assert_command_path "${nix_profile_bin}/wget"
+  wget --version
+}
+
 main() {
+  run_test test_curl_installation
   run_test test_fd_installation
   run_test test_jq_installation
   run_test test_pdftotext_installation
   run_test test_pdfinfo_installation
   run_test test_ripgrep_installation
   run_test test_tree_installation
+  run_test test_wget_installation
 }
 
 main "$@"

@@ -30,6 +30,14 @@ Run:
 bash <(curl -fsSL https://github.com/ut-issl/issl-environment/releases/latest/download/setup.sh)
 ```
 
+If `curl` is not installed, as on a fresh Ubuntu Desktop, use `wget` instead:
+
+```bash
+bash <(wget -nv -O- https://github.com/ut-issl/issl-environment/releases/latest/download/setup.sh)
+```
+
+The other commands in this guide work the same way with `curl -fsSL` replaced by `wget -nv -O-`.
+
 To pin setup to a fixed release, replace `latest` with a tag such as `v0.14.2`:
 
 ```bash

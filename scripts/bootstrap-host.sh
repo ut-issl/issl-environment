@@ -15,6 +15,19 @@ require_command() {
   fi
 }
 
+fetch_url() {
+  local url="$1"
+
+  if command -v curl > /dev/null 2>&1; then
+    curl --fail --location --proto '=https' --tlsv1.2 --show-error --silent "${url}"
+  elif command -v wget > /dev/null 2>&1; then
+    wget --no-verbose --output-document=- "${url}"
+  else
+    echo 'required command not found: curl or wget' >&2
+    exit 1
+  fi
+}
+
 is_interactive() {
   [[ -t 0 && -t 1 ]]
 }
@@ -88,10 +101,9 @@ ensure_nix() {
     return
   fi
 
-  require_command curl
   require_command sh
 
-  installer_script="$(curl --fail --location --proto '=https' --tlsv1.2 https://nixos.org/nix/install)"
+  installer_script="$(fetch_url https://nixos.org/nix/install)"
   sh -c "${installer_script}" nix-install --daemon
   source_nix
 }
@@ -263,6 +275,10 @@ maybe_register_login_shell() {
 
 nix_with_openssh() {
   nix --extra-experimental-features 'nix-command flakes' shell nixpkgs#openssh_gssapi --command "$@"
+}
+
+nix_with_curl() {
+  nix --extra-experimental-features 'nix-command flakes' shell nixpkgs#curl --command "$@"
 }
 
 has_github_ssh_auth() {
@@ -456,6 +472,7 @@ target_docker_user() {
 
 install_docker_engine() {
   local apt_keyrings_dir='/etc/apt/keyrings'
+  local docker_key=''
   local docker_user=''
   local repository=''
   local distribution=''
@@ -471,12 +488,13 @@ install_docker_engine() {
   suite="${repository#* }"
 
   sudo apt-get update
-  sudo apt-get --yes install ca-certificates curl gnupg
-  require_command curl
+  sudo apt-get --yes install ca-certificates gnupg
   require_command gpg
   sudo install -m 0755 -d "${apt_keyrings_dir}"
 
-  curl --fail --location --show-error --silent "https://download.docker.com/linux/${distribution}/gpg" \
+  docker_key="$(nix_with_curl curl --fail --location --proto '=https' --tlsv1.2 --show-error --silent \
+    "https://download.docker.com/linux/${distribution}/gpg")"
+  printf '%s\n' "${docker_key}" \
     | gpg --dearmor \
     | sudo tee "${apt_keyrings_dir}/docker.gpg" > /dev/null
   sudo chmod a+r "${apt_keyrings_dir}/docker.gpg"
