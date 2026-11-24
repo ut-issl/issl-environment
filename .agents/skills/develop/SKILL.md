@@ -153,6 +153,7 @@ Run validation in this order:
 2. Run the Nix validation of § "Validating Changes", but run the checks one at a time.
    Do not run `nix flake check` for this: it evaluates every check in one process, which takes well over a GiB.
    - Stage the new files as that section describes.
+
    - Build the checks for the system of this machine:
      `x86_64-linux` or `aarch64-linux`, matching the `x86_64` or `aarch64` that `uname -m` prints.
      List them, then build each listed name in turn:
@@ -171,6 +172,7 @@ Run validation in this order:
    - If the change edits the `packages` or `formatter` outputs of `flake.nix`,
      also evaluate `.#formatter.<system>.drvPath` and `.#packages.<system>.<name>.drvPath` for each package
      with `nix eval --raw --show-trace`, for both systems, which `nix flake check` would otherwise have covered.
+
    - Then build the activation packages and inspect the installed binaries and deployed files.
      Build for the system of this machine, not the one in the example command.
      Remove the `result-*` symlinks when done.
