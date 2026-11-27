@@ -143,6 +143,53 @@ When changing a module's packages or settings:
 1. Update `<name>/<name>.nix`.
 2. Add or extend tests under `tests/`, and update `tests/run.sh` if you add a new test script.
 
+## Adding a Package That Nixpkgs Does Not Provide
+
+A tool that Nixpkgs does not provide, such as one developed in the laboratory, can be packaged under `pkgs/` instead.
+[Repository Structure](91-repository-structure.md#pkgs) describes the layout.
+The package fetches a prebuilt archive from the GitHub releases of the tool, so no machine builds it from source.
+`overlays.default` adds it to `pkgs`, so a module installs it like any other package.
+
+Its `src` is limited to a file that `fetchurl` downloads, whose hash is that of the file itself.
+`scripts/update-package-hashes.sh` computes no hash of a source that is unpacked before hashing, such as one from `fetchFromGitHub`.
+
+`pkgs/<name>/source.json` takes the same shape for every package:
+
+```json
+{
+  "repository": "<owner>/<repo>",
+  "version": "1.2.3",
+  "hashes": {
+    "x86_64-linux": "sha256-...",
+    "aarch64-linux": "sha256-..."
+  }
+}
+```
+
+- `repository` is the GitHub repository of the tool, and `version` is its release tag without the leading `v`.
+- `hashes` holds, for each system, the SRI hash of the file that `src` fetches.
+  Its keys are the systems the package supports, which `package.nix` passes to `meta.platforms`.
+  A source that is the same on every system, such as a Python sdist, still has one entry per system.
+
+When adding a package:
+
+1. Create `pkgs/<name>/package.nix`, taking the version and the hashes from `source.json`,
+   as `pkgs/utokyo-wifi/package.nix` does.
+2. Create `pkgs/<name>/source.json` with an empty string as each hash, and stage both files with `git add -N`.
+3. Run `scripts/update-package-hashes.sh <name>` to fill in the hashes.
+4. Add the package to `home.packages` of the module it belongs to.
+5. Add or extend tests under `tests/`, and update `tests/run.sh` if you add a new test script.
+
+Renovate keeps the package up to date.
+It reads `repository` and `version` from `source.json`,
+and opens a pull request that raises `version` once a new release is old enough.
+`.github/workflows/update-package-hashes.yaml` then runs `scripts/update-package-hashes.sh` on that branch
+and pushes the new hashes as a commit of its own.
+To update a package by hand, change `version` and run the script.
+
+Once Nixpkgs provides a package of the same name, the `local-packages` check in `flake.nix` fails.
+Delete `pkgs/<name>/` then, and the module installs the package from Nixpkgs with no other change.
+
 ## Adding a Module
 
 A module is a directory under `home-modules/` holding `<name>/<name>.nix` together with the configuration files it deploys:
@@ -273,7 +320,8 @@ A directory whose `<name>.nix` alone is untracked is reported as missing that fi
    This builds the checks of the system of this machine and catches Nix evaluation errors and build failures.
    They include the activation packages for the default and the Bash-only configuration,
    the assertion that the GPU option stays off,
-   and the assertion that the packages taken from `nixpkgs-unstable` come from it.
+   the assertion that the packages taken from `nixpkgs-unstable` come from it,
+   and the assertion that Nixpkgs provides none of the packages under `pkgs/`.
    `--all-systems` widens the evaluation to every system declared in `flake.nix` without building more,
    so a change that fails to evaluate on `aarch64-linux` is caught here rather than in CI.
 
