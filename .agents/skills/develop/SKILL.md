@@ -77,7 +77,9 @@ For a new tool:
 - An unfree package needs an explicit yes from the user before you add it,
   on top of the justification that § "What Belongs in the Shared Environment" asks for in the pull request.
 - If the package is not in Nixpkgs, report honestly and let the user decide.
-  Never add flake inputs or overlays without an explicit yes.
+  One option to offer is packaging it under `pkgs/` from the prebuilt archives of its GitHub releases,
+  as § "Adding a Package That Nixpkgs Does Not Provide" describes, when its releases publish such archives.
+  Never add a package under `pkgs/`, flake inputs or overlays without an explicit yes.
 
 ## 4. Decide where the change goes
 
@@ -87,6 +89,7 @@ Work out which one the request is, and follow that section rather than improvisi
 - only the contents of a file this repository already deploys → § "Changing a Deployed File"
 - a configuration file this repository does not deploy yet → § "Adding a Deployed File"
 - a package or a Home Manager option in an existing module → § "Changing a Module's Packages or Settings"
+- a package that Nixpkgs lacks, once the user chose `pkgs/` → § "Adding a Package That Nixpkgs Does Not Provide"
 - a distinct area with no module of its own → § "Adding a Module"
 
 Reuse the existing `issl.zsh.enable` option where it fits.
