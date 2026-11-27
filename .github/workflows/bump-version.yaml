@@ -44,7 +44,7 @@ jobs:
 
       - name: Bump version
         id: bump-version
-        uses: conjikidow/bump-version-action@c58e4529b50fe2ad1da6fb449ecfc2fb4e564f49 # v4.3.0
+        uses: conjikidow/bump-version-action@6d1c904854b8537c080371c2e28094931fd46a1b # v4.3.1
         with:
           label-major: update::major
           label-minor: update::minor
