@@ -24,10 +24,20 @@
       ];
       forAllSystems = nixpkgs.lib.genAttrs systems;
       mkPkgs = system: import nixpkgs { inherit system; };
+      localPackages =
+        pkgs:
+        nixpkgs.lib.optionalAttrs (builtins.pathExists ./pkgs) (
+          nixpkgs.lib.packagesFromDirectoryRecursive {
+            inherit (pkgs) callPackage;
+            directory = ./pkgs;
+          }
+        );
+      overlays.default = final: _prev: localPackages final;
       homeModules = rec {
         common = {
           imports = [ ./home-modules ];
           _module.args.nixpkgsUnstable = nixpkgs-unstable;
+          nixpkgs.overlays = nixpkgs.lib.mkBefore [ overlays.default ];
         };
         default = common;
       };
@@ -67,12 +77,16 @@
         };
     in
     {
-      packages = forAllSystems (system: {
-        default = home-manager.packages.${system}.home-manager;
-        inherit (home-manager.packages.${system}) home-manager;
-      });
+      packages = forAllSystems (
+        system:
+        localPackages ((mkPkgs system).extend overlays.default)
+        // {
+          default = home-manager.packages.${system}.home-manager;
+          inherit (home-manager.packages.${system}) home-manager;
+        }
+      );
 
-      inherit homeModules;
+      inherit overlays homeModules;
 
       homeConfigurations = {
         common-x86_64-linux = mkHomeConfiguration {
@@ -143,6 +157,19 @@
           assert nixpkgs.lib.assertMsg (notFromUnstable == [ ])
             "${nixpkgs.lib.concatStringsSep ", " notFromUnstable} must come from nixpkgs-unstable: an outdated client can be refused by its remote service.";
           (mkPkgs system).emptyFile;
+        local-packages =
+          let
+            pkgs = import nixpkgs {
+              inherit system;
+              config.allowAliases = false;
+            };
+            inNixpkgs = builtins.filter (name: pkgs ? ${name}) (nixpkgs.lib.attrNames (localPackages pkgs));
+          in
+          assert nixpkgs.lib.assertMsg (inNixpkgs == [ ])
+            "${
+              nixpkgs.lib.concatMapStringsSep ", " (name: "pkgs/${name}/") inNixpkgs
+            } must be removed: nixpkgs now provides the package of the same name.";
+          pkgs.emptyFile;
       });
     };
 }
