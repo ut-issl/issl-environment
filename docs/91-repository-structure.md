@@ -10,6 +10,7 @@ At a high level:
 
 - `flake.nix` defines supported systems and Home Manager outputs.
 - `home-modules/` defines the shared environment as composable modules, each holding the configuration files it deploys.
+- `pkgs/` defines the packages that the shared environment installs but Nixpkgs does not provide.
 - `scripts/` provides imperative entry points for setup and application.
 - `tests/` verifies that the resulting environment and deployed files match expectations.
 - `docs/` explains usage and maintenance.
@@ -23,6 +24,8 @@ At a high level:
   - the upstream inputs such as `nixpkgs` and `home-manager`
   - supported systems
   - the shared Home Manager module exported as `homeModules.common`, aliased as `homeModules.default`
+  - the overlay exported as `overlays.default`, which adds the packages under `pkgs/`
+  - the packages exported as `packages.<system>`: those under `pkgs/`, and `home-manager` aliased as `default`
   - Home Manager configurations such as `common-x86_64-linux` and its Bash-only variant `common-bash-only-x86_64-linux`
   - basic checks built from those configurations
 - `flake.lock` pins dependency revisions for reproducibility.
@@ -41,6 +44,21 @@ Each module is a directory holding its Nix expression together with the configur
 - `default.nix` is the aggregation point, and the only `default.nix` in this directory tree.
   It imports every module directory automatically.
 
+### `pkgs/`
+
+This directory contains the packages that the shared environment installs but Nixpkgs does not provide,
+such as the tools developed in the laboratory.
+Each package is a directory named after it, and nothing else sits directly under `pkgs/`.
+
+- `<name>/package.nix` defines how the package is built, including the release asset it fetches for each system.
+- `<name>/source.json` holds the GitHub repository, the version, and the hash of the fetched file for each system.
+  It is the only file that changes when the package is updated, whether by hand or by Renovate.
+
+`flake.nix` reads the directory with `lib.packagesFromDirectoryRecursive`.
+It adds every package to `pkgs` through `overlays.default`, which `homeModules.common` applies,
+and exports every package as `packages.<system>.<name>`, so that `nix build .#<name>` builds one on its own.
+The `local-packages` check fails once Nixpkgs provides a package of the same name.
+
 ### `scripts/`
 
 This directory contains imperative shell entry points.
@@ -57,6 +75,10 @@ This directory contains imperative shell entry points.
 - `scripts/apply.sh` applies this repository's shared configuration into the current user environment.
   - It writes include blocks or startup hooks into user-controlled files.
   - It places the shared configuration files under the ISSL config directory.
+- `scripts/update-package-hashes.sh <name>...` recomputes the hashes in `pkgs/<name>/source.json` from its version.
+  - The workflow `.github/workflows/update-package-hashes.yaml` runs it
+    on the pull requests in which Renovate updates a version.
+  - It also serves a package that is added or updated by hand.
 
 ### `tests/`
 

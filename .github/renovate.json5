@@ -5,6 +5,9 @@
     ':semanticCommitTypeAll(build)',
   ],
   minimumReleaseAge: '3 days',
+  gitIgnoredAuthors: [
+    'github-actions[bot]@users.noreply.github.com',
+  ],
   labels: [
     'automated',
     'dependencies',
@@ -71,6 +74,19 @@
       depNameTemplate: 'lycheeverse/lychee',
       datasourceTemplate: 'github-releases',
       extractVersionTemplate: '^lychee-(?<version>v\\d+\\.\\d+\\.\\d+)$',
+    },
+    {
+      customType: 'jsonata',
+      description: 'Track the release of each package under pkgs/, which its source.json names by the GitHub repository and the version without the leading v',
+      managerFilePatterns: [
+        '/^pkgs/[^/]+/source\\.json$/',
+      ],
+      fileFormat: 'json',
+      matchStrings: [
+        '$exists(repository) and $exists(version) ? { "depName": repository, "currentValue": version }',
+      ],
+      datasourceTemplate: 'github-releases',
+      extractVersionTemplate: '^v(?<version>.+)$',
     },
     {
       customType: 'regex',

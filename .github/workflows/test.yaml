@@ -45,6 +45,7 @@ jobs:
           files_yaml: |
             test:
               - 'home-modules/**'
+              - 'pkgs/**'
               - 'scripts/apply.sh'
               - 'scripts/bootstrap-host.sh'
               - 'scripts/setup.sh'

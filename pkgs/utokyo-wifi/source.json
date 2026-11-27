@@ -1,0 +1,8 @@
+{
+  "repository": "conjikidow/utokyo-wifi-connector",
+  "version": "0.1.3",
+  "hashes": {
+    "x86_64-linux": "sha256-9I1HDDZqeXYDbuBX+CmwWIvywjqhv1+lnkfKiNBR1S0=",
+    "aarch64-linux": "sha256-9A7zKwx2kuLFYn30QIyN1fMffm9Rb11TJt49on/zru0="
+  }
+}
