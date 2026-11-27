@@ -7,6 +7,11 @@ nix_profile_bin="${home_dir}/.nix-profile/bin"
 
 source "${common_dir}/tests/lib.sh"
 
+test_capsula_installation() {
+  assert_command_path "${nix_profile_bin}/capsula"
+  capsula --version
+}
+
 test_commitizen_installation() {
   assert_command_path "${nix_profile_bin}/cz"
   cz version
@@ -38,6 +43,7 @@ test_yamllint_installation() {
 }
 
 main() {
+  run_test test_capsula_installation
   run_test test_commitizen_installation
   run_test test_prek_installation
   run_test test_rumdl_installation
