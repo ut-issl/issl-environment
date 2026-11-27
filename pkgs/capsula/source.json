@@ -1,0 +1,8 @@
+{
+  "repository": "ut-issl/capsula",
+  "version": "0.16.0",
+  "hashes": {
+    "x86_64-linux": "sha256-bdWbLVwc1xbgFfNf4vtemw+BwYKVsM6LZYRc/tVebPQ=",
+    "aarch64-linux": "sha256-phylROSdVio/EUHGx1o2iWYl8NEX86STOCoGwhx1xHg="
+  }
+}
