@@ -2,6 +2,7 @@
 
 {
   home.packages = [
+    pkgs.capsula
     pkgs.commitizen
     pkgs.prek
     pkgs.rumdl
