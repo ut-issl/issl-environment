@@ -249,7 +249,7 @@ jobs:
           HEAD_COMMIT: ${{ steps.baseline.outputs.head-commit }}
         run: |
           other_commits="$(git log --format='%an%x09%h %s' "${BASE_COMMIT}..${HEAD_COMMIT}" \
-            -- flake.nix flake.lock home-modules scripts \
+            -- flake.nix flake.lock home-modules pkgs scripts \
             | awk -F '\t' '$1 != "renovate[bot]" { print $2 }')"
           if [[ -z ${other_commits} ]]; then
             echo 'other-changes=false' >> "${GITHUB_OUTPUT}"
