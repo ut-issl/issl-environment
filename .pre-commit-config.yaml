@@ -120,7 +120,7 @@ repos:
       - id: shellcheck
 
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: e153e14bdac00edc46e390e4f99cbc6bbf808ef6  # frozen: v4.19.4
+    rev: fb3d172721d67324b2b85cce07abe9caa3cea492  # frozen: v4.20.1
     hooks:
       - id: commitizen
       - id: commitizen-branch
