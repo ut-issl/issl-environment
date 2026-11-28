@@ -34,7 +34,7 @@ repos:
         args: [--error-on-warnings]
 
   - repo: https://github.com/rvben/rumdl-pre-commit
-    rev: 539ea2e1c5a0eb8adeb5fe0b1e2eb66fa5827042  # frozen: v0.3.5
+    rev: 4fe331a7a15503e1530cf27656fb08db83cffa34  # frozen: v0.3.6
     hooks:
       - id: rumdl-check
         args: [--fix]
